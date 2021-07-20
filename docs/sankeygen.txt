@@ -1,0 +1,227 @@
+Use this format to regenerate the visual diagram at:
+https://sankeymatic.com/build/
+
+'Time > Region
+Week [16] All-Regions
+Month [16] All-Regions
+All-Time [16] All-Regions
+Week [16] NA
+Month [16] NA
+All-Time [16] NA
+Week [16] SA
+Month [16] SA
+All-Time [16] SA
+Week [16] SE
+Month [16] SE
+All-Time [16] SE
+Week [16] EU
+Month [16] EU
+All-Time [16] EU
+
+'Region > Mode
+:All-Modes #1abc9c
+:Brawl #3498db
+:Classic #f1c40f
+:Rank #e74c3c
+
+All-Regions [12] All-Modes #1abc9c
+All-Regions [12] Brawl #3498db
+All-Regions [12] Classic #f1c40f
+All-Regions [12] Rank #e74c3c
+
+NA [12] All-Modes #1abc9c
+NA [12] Brawl #3498db
+NA [12] Classic #f1c40f
+NA [12] Rank #e74c3c
+
+SA [12] All-Modes #1abc9c
+SA [12] Brawl #3498db
+SA [12] Classic #f1c40f
+SA [12] Rank #e74c3c
+
+SE [12] All-Modes #1abc9c
+SE [12] Brawl #3498db
+SE [12] Classic #f1c40f
+SE [12] Rank #e74c3c
+
+EU [12] All-Modes #1abc9c
+EU [12] Brawl #3498db
+EU [12] Classic #f1c40f
+EU [12] Rank #e74c3c
+
+
+'Mode > Elo
+All-Modes [15] All-Levels #1abc9c
+All-Modes [15] Normal #1abc9c
+All-Modes [15] High #1abc9c
+All-Modes [15] Very-High #1abc9c
+
+Brawl [15] All-Levels #3498db
+Brawl [15] Normal #3498db
+Brawl [15] High #3498db
+Brawl [15] Very-High #3498db
+
+Classic [15] All-Levels #f1c40f
+Classic [15] Normal #f1c40f
+Classic [15] High #f1c40f
+Classic [15] Very-High #f1c40f
+
+Rank [15] All-Levels #e74c3c
+Rank [15] Normal #e74c3c
+Rank [15] High #e74c3c
+Rank [15] Very-High #e74c3c
+
+'Elo > HeroType'
+
+All-Levels [10] Fighter #99AAB5
+All-Levels [10] Assassin #99AAB5
+All-Levels [10] Mage #99AAB5
+All-Levels [10] Tank #99AAB5
+All-Levels [10] Support #99AAB5
+All-Levels [10] Marksman #99AAB5
+
+Normal [10] Fighter #99AAB5
+Normal [10] Assassin #99AAB5
+Normal [10] Mage #99AAB5
+Normal [10] Tank #99AAB5
+Normal [10] Support #99AAB5
+Normal [10] Marksman #99AAB5
+
+High [10] Fighter #99AAB5
+High [10] Assassin #99AAB5
+High [10] Mage #99AAB5
+High [10] Tank #99AAB5
+High [10] Support #99AAB5
+High [10] Marksman #99AAB5
+
+Very-High [10] Fighter #99AAB5
+Very-High [10] Assassin #99AAB5
+Very-High [10] Mage #99AAB5
+Very-High [10] Tank #99AAB5
+Very-High [10] Support #99AAB5
+Very-High [10] Marksman #99AAB5
+
+
+'HeroType > Heroes'
+Tank [5] Akai
+
+'Angela
+'Carmilla
+Support [40] Hero_Name
+'Diggie
+'Estes
+'Faramis
+'Lolita
+'Mathilda
+'Rafaela
+
+
+'Akai
+'Atlas
+Tank [35] Hero_Name
+'Barats
+'Baxia
+'Belerick
+'Franco
+'Gatotkaca
+'Gloo
+'Grock
+'Hylos
+'Johnson
+'Khufra
+'Minotaur
+'Ruby
+'Tigreal
+'Uranus
+
+'Alice
+'Aurora
+Mage [40] Hero_Name
+'Cecilion
+'Chang-e
+'Cyclops
+'Esmeralda
+'Eudora
+'Gord
+'Harith
+'Harley
+'Kadita
+'Kagura
+'Luo Yi
+'Lunox
+'Lylia
+'Nana
+'Odette
+'Pharsa
+'Vale
+'Valir
+'Vexana
+'Yve
+'Zhask
+
+'Beatrix
+'Brody
+'Marskman [3] Bruno
+Marksman [40] Hero_Name
+'Claude
+'Clint
+'Granger
+'Hanabi
+'Irithel
+'Karrie
+'Kimmy
+'Layla
+'Lesley
+'Miya
+'Moskov
+'Popol and Kupa
+'Wanwan
+'Yi Sun-shin'
+
+'Aldous
+'Alpha
+'Alucard
+Fighter [35] Hero_Name
+'Argus
+'Badang
+'Balmond
+'Bane
+'Chou
+'Dyrroth
+'Freya
+'Guinevere
+'Hilda
+'Jawhead
+'Kaja
+'Khaleed
+'Lapu-Lapu
+'Leomord
+'Martis
+'Masha
+'Minsitthar
+'Paquito
+'Phoveus
+'Roger
+'Silvanna
+'Sun
+'Terizla
+'Thamuz
+'X.Borg
+'Yu Zhong
+'Zilong'
+
+'Benedetta
+'Fanny
+'Gusion
+Assassin [40] Hero_Name
+'Hanzo
+'Hayabusa
+'Helcurt
+'Karina
+'Lancelot
+'Ling
+'Natalia
+'Saber
+'Selena
+Fighter [5] Zilong
+
