@@ -1,3 +1,10 @@
+/.idea/misc.xml
+/.idea/MLBB-TierData.iml
+/.idea/modules.xml
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/workspace.xml
+/.idea/vcs.xml
+index.py.bak
 *.bak
 *.DS_Store
 .env

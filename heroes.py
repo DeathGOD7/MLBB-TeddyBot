@@ -79,6 +79,7 @@ list = [
 'Moskov',
 'Nana',
 'Natalia',
+'Natan',
 'Null',
 'Odette',
 'Paquito',

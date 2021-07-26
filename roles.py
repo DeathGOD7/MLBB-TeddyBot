@@ -65,6 +65,7 @@ marksman=[
 'Lesley',
 'Miya',
 'Moskov',
+'Natan',
 'Popol and Kupa',
 'Wanwan',
 'Yi Sun-shin'

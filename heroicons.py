@@ -79,6 +79,7 @@ portrait = {
 'moskov':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_1ec30f6756a980ef6567f304484efb64.png',
 'nana':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_08d0332be76ff7bdd894f7c7227be56c.png',
 'natalia':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_50b8723a3ca11dd18d34d26948aef12b.png',
+'natan':'https://static.wikia.nocookie.net/mobile-legends/images/2/22/Natan.png',
 'null':'https://null',
 'odette':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_52fb977cbea359297a830eef50cc33c2.png',
 'paquito':'https://static.wikia.nocookie.net/mobile-legends/images/5/57/Paquito.png',
