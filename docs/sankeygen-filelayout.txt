@@ -1,0 +1,223 @@
+'Use this format to regenerate the visual diagram at:
+'https://sankeymatic.com/build/
+
+
+
+
+'Region > Time
+All-Regions [16] All-Time
+All-Regions [16] Week
+All-Regions [16] Month
+NA [16] All-Time
+NA [16] Week
+NA [16] Month
+SA [16] All-Time
+SA [16] Week
+SA [16] Month
+SE [16] All-Time
+SE [16] Week
+SE [16] Month
+EU [16] All-Time
+EU [16] Week
+EU [16] Month
+
+
+'Time > Elo'
+Week [20] All-Levels
+Month [20] All-Levels
+All-Time [20] All-Levels
+Week [20] Normal
+Month [20] Normal
+All-Time [20] Normal
+Week [20] High
+Month [20] High
+All-Time [20] High
+Week [20] Very-High
+Month [20] Very-High
+All-Time [20] Very-High
+
+
+
+
+:All-Modes #1abc9c
+:Brawl #3498db
+:Classic #f1c40f
+:Rank #e74c3c
+
+
+All-Levels [15] All-Modes #1abc9c
+All-Levels [15] Brawl #3498db
+All-Levels [15] Classic #f1c40f
+All-Levels [15] Rank #e74c3c
+
+Normal [15] All-Modes #1abc9c
+Normal [15] Brawl #3498db
+Normal [15] Classic #f1c40f
+Normal [15] Rank #e74c3c
+
+High [15] All-Modes #1abc9c
+High [15] Brawl #3498db
+High [15] Classic #f1c40f
+High [15] Rank #e74c3c
+
+Very-High [15] All-Modes #1abc9c
+Very-High [15] Brawl #3498db
+Very-High [15] Classic #f1c40f
+Very-High [15] Rank #e74c3c
+
+
+
+'mode > HeroType'
+
+All-Modes [10] Fighter #99AAB5
+All-Modes [10] Assassin #99AAB5
+All-Modes [10] Mage #99AAB5
+All-Modes [10] Tank #99AAB5
+All-Modes [10] Support #99AAB5
+All-Modes [10] Marksman #99AAB5
+
+Brawl [10] Fighter #99AAB5
+Brawl [10] Assassin #99AAB5
+Brawl [10] Mage #99AAB5
+Brawl [10] Tank #99AAB5
+Brawl [10] Support #99AAB5
+Brawl [10] Marksman #99AAB5
+
+Classic [10] Fighter #99AAB5
+Classic [10] Assassin #99AAB5
+Classic [10] Mage #99AAB5
+Classic [10] Tank #99AAB5
+Classic [10] Support #99AAB5
+Classic [10] Marksman #99AAB5
+
+Rank [10] Fighter #99AAB5
+Rank [10] Assassin #99AAB5
+Rank [10] Mage #99AAB5
+Rank [10] Tank #99AAB5
+Rank [10] Support #99AAB5
+Rank [10] Marksman #99AAB5
+
+
+'HeroType > Heroes'
+Tank [5] Akai
+
+'Angela
+'Carmilla
+Support [40] Hero_Name
+'Diggie
+'Estes
+'Faramis
+'Lolita
+'Mathilda
+'Rafaela
+
+
+'Akai
+'Atlas
+Tank [35] Hero_Name
+'Barats
+'Baxia
+'Belerick
+'Franco
+'Gatotkaca
+'Gloo
+'Grock
+'Hylos
+'Johnson
+'Khufra
+'Minotaur
+'Ruby
+'Tigreal
+'Uranus
+
+'Alice
+'Aurora
+Mage [40] Hero_Name
+'Cecilion
+'Chang-e
+'Cyclops
+'Esmeralda
+'Eudora
+'Gord
+'Harith
+'Harley
+'Kadita
+'Kagura
+'Luo Yi
+'Lunox
+'Lylia
+'Nana
+'Odette
+'Pharsa
+'Vale
+'Valir
+'Vexana
+'Yve
+'Zhask
+
+'Beatrix
+'Brody
+'Marskman [3] Bruno
+Marksman [40] Hero_Name
+'Claude
+'Clint
+'Granger
+'Hanabi
+'Irithel
+'Karrie
+'Kimmy
+'Layla
+'Lesley
+'Miya
+'Moskov
+'Popol and Kupa
+'Wanwan
+'Yi Sun-shin'
+
+'Aldous
+'Alpha
+'Alucard
+Fighter [35] Hero_Name
+'Argus
+'Badang
+'Balmond
+'Bane
+'Chou
+'Dyrroth
+'Freya
+'Guinevere
+'Hilda
+'Jawhead
+'Kaja
+'Khaleed
+'Lapu-Lapu
+'Leomord
+'Martis
+'Masha
+'Minsitthar
+'Paquito
+'Phoveus
+'Roger
+'Silvanna
+'Sun
+'Terizla
+'Thamuz
+'X.Borg
+'Yu Zhong
+'Zilong'
+
+'Benedetta
+'Fanny
+'Gusion
+Assassin [40] Hero_Name
+'Hanzo
+'Hayabusa
+'Helcurt
+'Karina
+'Lancelot
+'Ling
+'Natalia
+'Saber
+'Selena
+Fighter [5] Zilong
+
