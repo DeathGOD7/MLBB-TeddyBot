@@ -28,7 +28,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 logging.basicConfig(filename="/tmp/teddy.log", level=logging.INFO, format="%(asctime)s:%(levelname)s:%(message)s")
 
 #### VERSION ####
-version = "BETA Release Candidate Ver.01.63 (20210729)"
+version = "BETA Release Candidate Ver.01.65 (20210729)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # region PERMISSIONS
@@ -250,13 +250,14 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                             \nBy default, Teddy searches 'All-Modes','All-Regions', and 'All-Elo' \
                             \n\nIf you find an outlier, try defining an elo, region, or game mode to refine your search: \
                             \ne.g. `/td mode:Classic region:EU elo:High` will give you MORE ACCURATE data than: `/td` alone"
-
+            #Declare Embed
             helpembed = discord.Embed(
                 title=f" About: {about_title}",
                 description=f"{desc}\n"
             )
-            helpembed.set_thumbnail(
-                url="https://icons.iconarchive.com/icons/custom-icon-design/flatastic-2/256/help-desk-icon.png")
+            if about_title == "The Data":
+                helpembed.set_image(url="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/sankeymatic_3000x1200.png?raw=true")
+            helpembed.set_thumbnail(url="https://icons.iconarchive.com/icons/custom-icon-design/flatastic-2/256/help-desk-icon.png")
 
             if about=="show":
                 helpembed.add_field(name=f"Version:",
