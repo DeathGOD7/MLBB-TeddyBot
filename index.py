@@ -1,3 +1,4 @@
+# region IMPORTS
 import datetime
 import os
 from os.path import exists
@@ -11,7 +12,7 @@ from discord.ext import commands
 from discord_slash import SlashCommand, SlashContext
 from discord_slash.utils.manage_commands import create_option, create_choice
 
-### IMPORT MOJI MAP
+# IMPORT MOJI MAP
 import mojimap
 import roles
 import heroes
@@ -19,10 +20,15 @@ import heroicons
 import laning
 
 import logging
+# endregion
+
+# region ENVIRONMENT
+load_dotenv()
+TOKEN = os.getenv("DISCORD_TOKEN")
 logging.basicConfig(filename="/tmp/teddy.log", level=logging.INFO, format="%(asctime)s:%(levelname)s:%(message)s")
 
 #### VERSION ####
-version = "BETA Release Candidate Ver.01.6 (20210728)"
+version = "BETA Release Candidate Ver.01.61 (20210729)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # region PERMISSIONS
@@ -34,10 +40,7 @@ optin = [853816389499748382,869691498952802355]
 optout = []
 # endregion
 
-# env:
-load_dotenv()
-TOKEN = os.getenv("DISCORD_TOKEN")
-
+# region VARIABLES
 x = datetime.datetime.now()
 today = x.strftime("%Y%m%d")
 
@@ -53,18 +56,17 @@ runtimes = sorted(runtimes, reverse=True)
 latest_run = max(d for d in runtimes)
 latest_run = os.path.join(rawpath, latest_run)
 print(latest_run)
+# endregion
 
 ##### DISCORD LISTENERS #######
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 slash = SlashCommand(bot, sync_commands=True)
 
-
 @bot.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(bot))
     logging.info('We have logged in as {0.user}'.format(bot))
-
 
 
 ########## MAIN TD FUNCTION ###########
@@ -604,6 +606,7 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
 '''
 ########## MAIN HERO FUNCTION ###########
 
+# region HERO TABLE GENERATOR
 regions = ["all", "NA", "SA", "SE", "EU"]
 ##modes = ["All-Modes", "rank", "brawl", "Classic"]
 modes = ["All-Modes", "Rank", "Brawl", "Classic"]
@@ -653,6 +656,7 @@ else:
 
 #print(dfx)
 logging.debug(f"{dfx}")
+# endregion
 
 ### START HERO FUNCTION
 @slash.slash(name="tdh",
@@ -896,6 +900,7 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
 '''
 ##########################################
 
+# region DISCORD STUFF
 # discord basic error handling:
 @bot.event
 async def on_command_error(ctx, error):
@@ -910,6 +915,7 @@ async def on_command_error(ctx, error):
     else:
         print("error not caught")
         print(error)
+# endregion
 
 
 bot.run(TOKEN)
