@@ -28,7 +28,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 logging.basicConfig(filename="/tmp/teddy.log", level=logging.INFO, format="%(asctime)s:%(levelname)s:%(message)s")
 
 #### VERSION ####
-version = "BETA Release Candidate Ver.01.61 (20210729)"
+version = "BETA Release Candidate Ver.01.63 (20210729)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # region PERMISSIONS
@@ -348,7 +348,7 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     df = df.sort_values('urank', ascending=True).tail(3)
 
                                 #check for outlier
-                                if (df['kda']>20).any():
+                                if (df['kda']>20).any() or (df['win']==100).any() or (df['use']==0).any():
                                     outlier +=1
                                     print(f"We have an outlier.")
 
@@ -841,6 +841,7 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                     await ctx.channel.send(file=file, embed=embed)
 
             else:
+                outlier = 0
                 #SHOW ALL TABLES
                 #### Create Filters
                 nfilter = dfx.isin([hn]).any(axis=1)
@@ -851,18 +852,27 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
 
                 sumdf = dfx[nfilter & rfilter & pfilter & mfilter & efilter]
                 sumdf = sumdf.reindex(columns=['region', 'elo', 'mode', 'win', 'use', 'kda'])
+
+                #Check for outlier
+                if (sumdf['kda'] > 20).any() or (sumdf['win'] == 100).any() or (sumdf['use'] == 0).any():
+                    outlier += 1
+                    print(f"We have an outlier.")
+
                 if sumdf.empty:
                     sumdf = "No data available."
                 else:
                     sumdf = sumdf.to_string(index=False)
                 embed.add_field(name=f" {ico} Summary for: {dt})", value=f"`{sumdf}`", inline=False)
-                # print(rslt_df)
 
                 ## CREATE EMBED FIELDS:
                 if r == "all":
                     rdf = dfx[nfilter & pfilter & mfilter & efilter]
                     rdf = rdf.reindex(columns=['region', 'elo', 'mode', 'win', 'use', 'kda'])
                     rdf.sort_values('region', ascending=True)
+                    # Check for outlier
+                    if (rdf['kda'] > 20).any() or (rdf['win'] == 100).any() or (rdf['use'] == 0).any():
+                        outlier += 1
+                        print(f"We have an outlier.")
                     if rdf.empty:
                         rdf = "No data available."
                     else:
@@ -873,6 +883,10 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                     mdf = dfx[nfilter & pfilter & rfilter & efilter]
                     mdf = mdf.reindex(columns=['mode', 'region', 'elo', 'win', 'use', 'kda'])
                     mdf.sort_values('mode', ascending=True)
+                    # Check for outlier
+                    if (mdf['kda'] > 20).any() or (mdf['win'] == 100).any() or (mdf['use'] == 0).any():
+                        outlier += 1
+                        print(f"We have an outlier.")
                     if mdf.empty:
                         mdf = "No data available."
                     else:
@@ -883,11 +897,22 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                     edf = dfx[nfilter & pfilter & rfilter & mfilter]
                     edf = edf.reindex(columns=['elo', 'mode', 'region', 'win', 'use', 'kda'])
                     edf.sort_values('elo', ascending=True)
+                    # Check for outlier
+                    if (edf['kda'] > 20).any() or (edf['win'] == 100).any() or (edf['use'] == 0).any():
+                        outlier += 1
+                        print(f"We have an outlier.")
                     if edf.empty:
                         edf = "No data available."
                     else:
                         edf = edf.to_string(index=False)
                     embed.add_field(name=f"Sorted by Elo:", value=f"`{edf}`", inline=False)
+
+                # IF OUTLIER
+                if outlier >= 1:
+                    embed.add_field(name=f":rotating_light: Outlier Notice:",
+                                    value=f":bear: Teddy has detected a statistically improbable anomaly in the data you have requested."
+                                          f"\nTry using a filter such as `/td mode:Rank` to get more accurate results.",
+                                    inline=False)
 
                 #### ADD EMBED FOR Foot
                 embed.add_field(name=f"Source:",
