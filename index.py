@@ -28,7 +28,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 logging.basicConfig(filename="/tmp/teddy.log", level=logging.INFO, format="%(asctime)s:%(levelname)s:%(message)s")
 
 #### VERSION ####
-version = "BETA Release Candidate Ver.01.67 (20210805)"
+version = "BETA Release Candidate Ver.02.00 (20210805)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -605,8 +605,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                 logging.warning(f"Bad Request: Missing: {latest_run}")
                 await ctx.channel.send(content="```No TierData Reported Yet...```")
 
-
-'''
 ########## MAIN HERO FUNCTION ###########
 
 # region HERO TABLE GENERATOR
@@ -750,7 +748,10 @@ logging.debug(f"{dfx}")
                      choices=[
                          create_choice(
                              name="History",
-                             value="history")
+                             value="history"),
+                         create_choice(
+                             name="Averages",
+                             value="averages")
                      ]
                  )
              ])
@@ -841,6 +842,42 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                                     inline=False)
 
                     await ctx.channel.send(file=file, embed=embed)
+            # CHECK FOR HISTORY:
+            if show == "averages":
+                # SHOW AVERAGES CHART
+                chart = f"{avgpath}{r}/{m}/{lvl}/{hnl}.png"
+
+                if not os.path.exists(chart):
+                    embed.add_field(name=f" {ico} Historical Summary:", value=f"`No Chart Available...`", inline=False)
+                    print(f"Missing: {chart}")
+                    logging.warning(f"Missing Chart: {chart}")
+
+                    #### ADD EMBED FOR Foot
+                    embed.add_field(name=f"Source:",
+                                            value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
+                                            inline=False)
+
+                    await ctx.channel.send(embed=embed)
+
+                else:
+                    embed.add_field(name=f" {ico} Statistical Summary:",
+                                    value=f"Averages in Win%, Use%, KDA over Time.",
+                                    inline=False)
+                    print(f"Reading Chart: {chart}")
+                    logging.info(f"Reading Chart: {chart}")
+                    file = discord.File(chart, filename=f"{hnl}.png")
+                    embed.set_image(url=f"attachment://{hnl}.png")
+
+                    #### ADD EMBED FOR Foot
+                    embed.add_field(name=f"How to Read:",
+                                    value=f"The boxplot shows the highest and lowest values for each. The line denotes the _median_ value and the ▲ denotes the _mean_. ○ denotes outliers, if detected.",
+                                    inline=False)
+                    embed.add_field(name=f"Source:",
+                                            value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
+                                            inline=False)
+                    await ctx.channel.send(file=file, embed=embed)
+
+
 
             else:
                 outlier = 0
@@ -923,8 +960,6 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
 
                 await ctx.channel.send(embed=embed)
 
-
-'''
 ##########################################
 
 # region DISCORD STUFF
