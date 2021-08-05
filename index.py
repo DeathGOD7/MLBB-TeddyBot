@@ -28,9 +28,11 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 logging.basicConfig(filename="/tmp/teddy.log", level=logging.INFO, format="%(asctime)s:%(levelname)s:%(message)s")
 
 #### VERSION ####
-version = "BETA Release Candidate Ver.01.65 (20210729)"
+version = "BETA Release Candidate Ver.01.67 (20210805)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
+# endregion
+
 # region PERMISSIONS
 guild_ids = [850386581135163489,832548513383972884]
 print(f"Enabling for Server(s):{guild_ids}")
@@ -766,9 +768,8 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
         logging.debug(f"Searching {shero} from {hero}")
 
         ### FIRST---- Search Array for Hero
-        result = [v for v in names if
-                  shero in v.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()]
-        # result = [v for v in names if v.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower().startswith(shero)]
+        #result = [v for v in names if shero in v.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()]
+        result = [v for v in names if v.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower().startswith(shero)]
 
         if len(result) == 0:
             await ctx.send(content=f"Could not find `{hero}`!")
