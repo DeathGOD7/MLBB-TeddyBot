@@ -878,9 +878,7 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                                             inline=False)
                     await ctx.channel.send(file=file, embed=embed)
 
-
-
-            else:
+            if show == "null":
                 outlier = 0
                 #SHOW ALL TABLES
                 #### Create Filters
