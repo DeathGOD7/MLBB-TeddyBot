@@ -1,10 +1,10 @@
 # Presentation: Meet TEDDY
 Link: [Meet Teddy](https://spark.adobe.com/page/BcSAFWkIpK2id/) (Adobe Spark)
 
+<a class="asp-embed-link" href="https://spark.adobe.com/page/BcSAFWkIpK2id/" target="_blank"><img src="https://spark.adobe.com/page/BcSAFWkIpK2id/embed.jpg?buster=1626383713887" alt="Meet TEDDY" style="width:80%; align:center" border="0" /></a>
+
 # Presentation: TEDDY 2.0 Features & Updates
 Link: [Teddy 2.0](https://spark.adobe.com/page/SPBxNf1anb9Y7/) (Adobe Spark)
-
-<a class="asp-embed-link" href="https://spark.adobe.com/page/BcSAFWkIpK2id/" target="_blank"><img src="https://spark.adobe.com/page/BcSAFWkIpK2id/embed.jpg?buster=1626383713887" alt="Meet TEDDY" style="width:80%; align:center" border="0" /></a>
 
 <a class="asp-embed-link" href="https://spark.adobe.com/page/SPBxNf1anb9Y7/" target="_blank"><img src="https://spark.adobe.com/page/SPBxNf1anb9Y7/embed.jpg?buster=1628267959506" alt="TEDDY v2.0" style="width:100%" border="0" /></a>
 
