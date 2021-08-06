@@ -49,6 +49,7 @@ today = x.strftime("%Y%m%d")
 #rawpath = "/tmp/TierData/"
 rawpath = "/root/MLBB-MyMLBB-Stats/TierData/json/"
 histpath = "/root/MLBB-MyMLBB-Stats/timeline/summary/"
+avgpath = "/root/MLBB-MyMLBB-Stats/timeline/averages/"
 
 prof = ["assassin","marksman","mage","tank","support","fighter"]
 lanes = ["gold","exp","mid","jungle","roam"]
@@ -978,7 +979,6 @@ async def on_command_error(ctx, error):
         print("error not caught")
         print(error)
 # endregion
-
 
 bot.run(TOKEN)
 #
