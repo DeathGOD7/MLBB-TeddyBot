@@ -42,7 +42,7 @@ Link: [Teddy 2.0](https://spark.adobe.com/page/SPBxNf1anb9Y7/) (Adobe Spark)
 ## Data Flow
 <img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/TEDDY%20FLOW-TEDDY-BetaRC.png">
 
-# DEV Functions
+# Hero Functions
 Repository: [MLBB-TeddyBot-DEV](https://github.com/p3hndrx/MLBB-TeddyBot-DEV)
 - Search by Hero<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/Hero-Basic-Command.png?raw=true">
   - hero: `Your Hero Input` (can match partial strings) 
@@ -55,9 +55,12 @@ Repository: [MLBB-TeddyBot-DEV](https://github.com/p3hndrx/MLBB-TeddyBot-DEV)
   - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/Hero-Command.png?raw=true">
   - Out:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/Hero-Basic.png?raw=true">
 - Optional: Hero: History View
-  - Choices: `History, None (default)` 
+  - Choices: `History, Averages, None (default)` 
   - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/Hero-History-Command.png?raw=true">
   - Out:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/Hero-Timeline.png?raw=true">
+- Optional: Hero: Averages View
+  - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/Hero-Averages-Command.png?raw=true">
+  - Out:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/Hero-Averages.png?raw=true">
 
-## DEV Data Flow
+## Updated Data Flow (v2.0+)
 <img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/TEDDY%20FLOW-TEDDY-DEV.png?raw=true">
