@@ -35,6 +35,10 @@ Link: [Teddy 2.0](https://spark.adobe.com/page/SPBxNf1anb9Y7/) (Adobe Spark)
   - Choices: `Normal (default), Meta, Role` 
   - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/BasicView.png?raw=true">
   - Out:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/View-Meta.png?raw=true">
+- View WinRate/KDA/Use
+  - Choices: `WinRate, KDA, Use` 
+  - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/2ndView.png?raw=true">
+  - Out:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/View-Win.png?raw=true">
 - About
   - Choices: `Teddy, The Data, Outliers, None (default)` 
   - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/BasicAbout.png?raw=true">
