@@ -28,7 +28,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 logging.basicConfig(filename="/tmp/teddy.log", level=logging.INFO, format="%(asctime)s:%(levelname)s:%(message)s")
 
 #### VERSION ####
-version = "BETA Release Candidate Ver.02.00 (20210805)"
+version = "BETA Release Candidate Ver.02.01 (20210811)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -202,7 +202,16 @@ async def on_ready():
                              value="meta"),
                          create_choice(
                              name="Role",
-                             value="role")
+                             value="role"),
+                         create_choice(
+                             name="WinRate",
+                             value="win"),
+                         create_choice(
+                             name="KDA",
+                             value="kda"),
+                         create_choice(
+                             name="Use",
+                             value="use")
                      ]
                  ),
                  create_option(
@@ -575,6 +584,102 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 #### ADD EMBED FOR TABLE
                                 embed.add_field(name=f"Sorted by {title}", value=f"{report}", inline=False)
 
+                        elif view=="win" or view=="kda" or view=="use":
+                            if view == "win":
+                                crit = "wrank"
+                                title = "WinRate"
+                            elif view=="kda":
+                                crit = "kdarank"
+                                title = "KDA"
+                            elif view =="use":
+                                crit = "urank"
+                                title = "USE"
+
+                            print(f"Request {title} View")
+                            logging.info(f"Request WinRate View")
+
+                            report = "\n"
+                            df = pd.DataFrame(rows, columns=[str(crit), 'name', 'win', 'use', 'kda'])
+
+                            # filter by role
+                            if role != "null":
+                                rslt = getattr(roles, role)
+                                # print(rslt)
+                                df = df[df['name'].isin(rslt)]
+
+                                if role == 'support':
+                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/f/ff/Support_Icon.png'
+                                elif role == 'mage':
+                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/5/53/Mage_Icon.png'
+                                elif role == 'marksman':
+                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/1/10/Marksman_Icon.png'
+                                elif role == 'assassin':
+                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/3/3f/Assassin_Icon.png'
+                                elif role == 'tank':
+                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/f/f0/Tank_Icon.png'
+                                elif role == 'fighter':
+                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/1/1a/Fighter_Icon.png'
+
+                                embed.set_author(name=f"Filter by {role.upper()}", icon_url=imgurl)
+
+                                # sort
+                            if sort == "Top":
+                                df = df.sort_values(str(crit), ascending=True).head(10)
+                            else:
+                                df = df.sort_values(str(crit), ascending=True).tail(10)
+
+                            #check for outlier
+                            if (df['kda']>20).any():
+                                outlier +=1
+                                print(f"We have an outlier in {crit}.")
+
+                            #### Add Icon Column
+                            df['o'] = df['name'].str.lower()
+                            df['o'] = df['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
+                            df['-'] = df['o'].map(mojimap.moji)
+                            del df['o']
+
+                            #### Add Padding and FORMAT:
+                            df['rank'] = df[str(crit)].astype(str)
+                            df['rank'] = ('`' + df['rank'].str.center(4) + '`')
+                            df['name'] = ('`' + df['name'].str.center(13) + '`')
+                            df['win'] = ('`' + df['win'].str.center(6) + '`')
+                            df['use'] = ('`' + df['use'].str.center(6) + '`')
+                            df['kda'] = df['kda'].astype(str)
+                            df['kda'] = ('`' + df['kda'].str.center(6) + '`')
+
+                            # REBUILD
+                            df = df.reindex(columns=['rank', '-', 'name', 'win', 'use', 'kda'])
+
+                            # FORMAT COLUMN HEADER
+                            r = "RANK"
+                            r = r.center(4, " ")
+                            i = "-"
+                            i = i.center(2, " ")
+                            n = "NAME"
+                            n = n.center(13, " ")
+                            w = "WIN"
+                            w = w.center(6, " ")
+                            u = "USE"
+                            u = u.center(6, " ")
+                            k = "KDA"
+                            k = k.center(6, " ")
+                            df.rename(columns={'rank': r, '-': i, 'name': n, 'win': w, 'use': u, 'kda': k}, inplace=True)
+                            df.columns = df.columns.astype(str)
+                            df.columns = ('`' + df.columns + '`')
+                            # print (df.columns)
+
+                            # OUTPUT TO TABLE
+                            table = df.to_string(index=False)
+
+                            # print(table)
+                            report += table
+
+
+
+                            #### ADD EMBED FOR TABLE
+                            embed.add_field(name=f"Sorted by {title}", value=f"{report}", inline=False)
+                            #print(f"{report}")
                     #### ADD EMBED FOR OUTLIER
                     if outlier >= 1:
                         embed.add_field(name=f":rotating_light: Outlier Notice:",
