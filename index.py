@@ -47,9 +47,9 @@ x = datetime.datetime.now()
 today = x.strftime("%Y%m%d")
 
 #rawpath = "/tmp/TierData/"
-rawpath = "/root/MLBB-MyMLBB-Stats/TierData/json/"
-histpath = "/root/MLBB-MyMLBB-Stats/timeline/summary/"
-avgpath = "/root/MLBB-MyMLBB-Stats/timeline/averages/"
+rawpath = "/var/www/html/TierData/json/"
+histpath = "/var/www/html/timeline/summary/"
+avgpath = "/var/www/html/timeline/averages/"
 
 prof = ["assassin","marksman","mage","tank","support","fighter"]
 lanes = ["gold","exp","mid","jungle","roam"]
