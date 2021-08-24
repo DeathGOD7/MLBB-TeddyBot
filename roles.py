@@ -4,6 +4,7 @@ support = [
 'Diggie',
 'Estes',
 'Faramis',
+'Floryn',
 'Lolita',
 'Mathilda',
 'Rafaela'
@@ -75,6 +76,7 @@ fighter=[
 'Alpha',
 'Alucard',
 'Argus',
+'Aulus',
 'Badang',
 'Balmond',
 'Bane',
@@ -103,6 +105,7 @@ fighter=[
 'Zilong'
 ]
 assassin=[
+'Aamon',
 'Benedetta',
 'Fanny',
 'Gusion',

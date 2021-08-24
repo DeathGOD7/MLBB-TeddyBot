@@ -1,4 +1,5 @@
 portrait = {
+'aamon':'https://static.wikia.nocookie.net/mobile-legends/images/3/3b/Aamon.png',
 'akai':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_5f694a5e98b116d1cbb143c8e766019b.png',
 'aldous':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_433f9653743e72e1e152428d26838f9e.png',
 'alice':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_7f0da9c3ddefff4530e8dbe17054c45e.png',
@@ -7,6 +8,7 @@ portrait = {
 'angela':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_feffcc9c39731586e645dbef2ce70afd.png',
 'argus':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_2207669dcfd1d516133c922cb01de4da.png',
 'atlas':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_a2f68d5c30c0198006b2c85b7a5cb48b.png',
+'aulus':'https://static.wikia.nocookie.net/mobile-legends/images/a/ae/Aulus.png',
 'aurora':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_e03bc05ecfcc5b9a97c7dc0b36767d61.png',
 'badang':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_686f5e16b9d129d7012751241943c2c9.png',
 'balmond':'https://indoch.s3.ml.moonlian.com/web/madmin/image_be884c14d560f6bc5827e2a663439f94.png',
@@ -32,6 +34,7 @@ portrait = {
 'eudora':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_ed32e3c71ecd41652fc54a7efd02aba4.jpg',
 'fanny':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_523a730c11b8c22fc6c3fcc5575c29a2.png',
 'faramis':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_f851bef0932a8ce4fd16e99bb11fed9a.png',
+'floryn':'https://static.wikia.nocookie.net/mobile-legends/images/7/71/Floryn.png',
 'franco':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_07605801972ede9147e9769ac7991aa0.png',
 'freya':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_a9a20c5d2a4a94af878a62c07ea373e0.jpg',
 'gatotkaca':'https://akmwebstatic.yuanzhanapp.com/web/madmin/image_8b7e7d0bf164c78553806661deb1d672.png',

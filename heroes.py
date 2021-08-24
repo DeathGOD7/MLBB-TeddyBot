@@ -1,4 +1,5 @@
 list = [
+'Aamon',
 'Akai',
 'Aldous',
 'Alice',
@@ -7,6 +8,7 @@ list = [
 'Angela',
 'Argus',
 'Atlas',
+'Aulus',
 'Aurora',
 'Badang',
 'Balmond',
@@ -32,6 +34,7 @@ list = [
 'Eudora',
 'Fanny',
 'Faramis',
+'Floryn',
 'Franco',
 'Freya',
 'Gatotkaca',
