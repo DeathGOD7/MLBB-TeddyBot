@@ -28,7 +28,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 logging.basicConfig(filename="/tmp/teddy.log", level=logging.INFO, format="%(asctime)s:%(levelname)s:%(message)s")
 
 #### VERSION ####
-version = "BETA Release Candidate Ver.02.01 (20210811)"
+version = "BETA Release Candidate Ver.02.02 (20211011)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -53,6 +53,10 @@ avgpath = "/var/www/html/timeline/averages/"
 
 prof = ["assassin","marksman","mage","tank","support","fighter"]
 lanes = ["gold","exp","mid","jungle","roam"]
+
+kdalim = 20
+uselim = 0
+winlim = 100
 
 runtimes = os.listdir(rawpath)
 runtimes = sorted(runtimes, reverse=True)
@@ -344,6 +348,11 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 rslt = getattr(laning, ln)
                                 df = df[df['name'].isin(rslt)]
 
+                                # check for outlier
+                                if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (df['use'] == uselim).any():
+                                    outlier += 1
+                                    print(f"We have an outlier.")
+
                                 if ln == 'roam':
                                     loji = '<:roam:864272305310924820>'
                                 elif ln == 'mid':
@@ -360,10 +369,9 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 else:
                                     df = df.sort_values('urank', ascending=True).tail(3)
 
-                                #check for outlier
-                                if (df['kda']>20).any() or (df['win']==100).any() or (df['use']==0).any():
-                                    outlier +=1
-                                    print(f"We have an outlier.")
+                                #replace outlier with xxx
+                                #df['kda'] = df['kda'].mask(df['kda'] > kdalim, 20.0)
+                                df['kda'] = df['kda'].mask(df['kda'] > kdalim, "---")
 
                                 #### Add Icon Column
                                 df['o'] = df['name'].str.lower()
@@ -422,6 +430,12 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 rslt = getattr(roles, p)
                                 df = df[df['name'].isin(rslt)]
 
+                                # check for outlier
+                                if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (
+                                        df['use'] == uselim).any():
+                                    outlier += 1
+                                    print(f"We have an outlier.")
+
                                 if p == 'support':
                                     poji = '<:Support_Icon:864271610797490177>'
                                 elif p == 'mage':
@@ -440,10 +454,9 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 else:
                                     df = df.sort_values('urank', ascending=True).tail(3)
 
-                                #check for outlier
-                                if (df['kda']>20).any():
-                                    outlier +=1
-                                    print(f"We have an outlier.")
+                                #replace with xxx
+                                #df['kda'] = df['kda'].mask(df['kda'] > kdalim, 20.0)
+                                df['kda'] = df['kda'].mask(df['kda'] > kdalim, "---")
 
                                 #### Add Icon Column
                                 df['o'] = df['name'].str.lower()
@@ -499,6 +512,12 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 report = "\n"
                                 df = pd.DataFrame(rows, columns=[str(crit), 'name', 'win', 'use', 'kda'])
 
+                                # check for outlier
+                                if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (
+                                        df['use'] == uselim).any():
+                                    outlier += 1
+                                    print(f"We have an outlier.")
+
                                 # filter by role
                                 if role != "null":
                                     rslt = getattr(roles, role)
@@ -526,10 +545,9 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 else:
                                     df = df.sort_values(str(crit), ascending=True).tail(5)
 
-                                #check for outlier
-                                if (df['kda']>20).any():
-                                    outlier +=1
-                                    print(f"We have an outlier in {crit}.")
+                                #replace with xxx
+                                #df['kda'] = df['kda'].mask(df['kda'] > kdalim, 20.0)
+                                df['kda'] = df['kda'].mask(df['kda'] > kdalim, "---")
 
                                 #### Add Icon Column
                                 df['o'] = df['name'].str.lower()
@@ -601,6 +619,11 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                             report = "\n"
                             df = pd.DataFrame(rows, columns=[str(crit), 'name', 'win', 'use', 'kda'])
 
+                            # check for outlier
+                            if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (df['use'] == uselim).any():
+                                outlier += 1
+                                print(f"We have an outlier.")
+
                             # filter by role
                             if role != "null":
                                 rslt = getattr(roles, role)
@@ -628,10 +651,9 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                             else:
                                 df = df.sort_values(str(crit), ascending=True).tail(10)
 
-                            #check for outlier
-                            if (df['kda']>20).any():
-                                outlier +=1
-                                print(f"We have an outlier in {crit}.")
+                            #replace with xxx
+                            #df['kda'] = df['kda'].mask(df['kda'] > kdalim, 20.0)
+                            df['kda'] = df['kda'].mask(df['kda'] > kdalim, "---")
 
                             #### Add Icon Column
                             df['o'] = df['name'].str.lower()
@@ -753,6 +775,7 @@ if os.path.isdir(latest_run):  # check for raw data path
                             # dfx.append(df, ignore_index = True)
                             dfx = pd.concat([dfx, df], axis=0)
                             # print(df)
+
                     else:
                         print(f"Bad Request: Missing: {jsonfile}")
                         logging.warning(f"Bad Request: Missing: {jsonfile}")
@@ -997,13 +1020,15 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                 sumdf = sumdf.reindex(columns=['region', 'elo', 'mode', 'win', 'use', 'kda'])
 
                 #Check for outlier
-                if (sumdf['kda'] > 20).any() or (sumdf['win'] == 100).any() or (sumdf['use'] == 0).any():
+                if (sumdf['kda'] > kdalim).any() or (sumdf['win'] == winlim).any() or (sumdf['use'] == uselim).any():
                     outlier += 1
                     print(f"We have an outlier.")
 
                 if sumdf.empty:
                     sumdf = "No data available."
                 else:
+                    # replace outlier with xxx
+                    sumdf['kda'] = sumdf['kda'].mask(sumdf['kda'] > kdalim, "---")
                     sumdf = sumdf.to_string(index=False)
                 embed.add_field(name=f" {ico} Summary for: {dt})", value=f"`{sumdf}`", inline=False)
 
@@ -1013,12 +1038,14 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                     rdf = rdf.reindex(columns=['region', 'elo', 'mode', 'win', 'use', 'kda'])
                     rdf.sort_values('region', ascending=True)
                     # Check for outlier
-                    if (rdf['kda'] > 20).any() or (rdf['win'] == 100).any() or (rdf['use'] == 0).any():
+                    if (rdf['kda'] > kdalim).any() or (rdf['win'] == winlim).any() or (rdf['use'] == uselim).any():
                         outlier += 1
                         print(f"We have an outlier.")
                     if rdf.empty:
                         rdf = "No data available."
                     else:
+                        #outlier
+                        rdf['kda'] = rdf['kda'].mask(rdf['kda'] > kdalim, "---")
                         rdf = rdf.to_string(index=False)
                     embed.add_field(name=f"Sorted by Region:", value=f"`{rdf}`", inline=False)
 
@@ -1027,12 +1054,14 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                     mdf = mdf.reindex(columns=['mode', 'region', 'elo', 'win', 'use', 'kda'])
                     mdf.sort_values('mode', ascending=True)
                     # Check for outlier
-                    if (mdf['kda'] > 20).any() or (mdf['win'] == 100).any() or (mdf['use'] == 0).any():
+                    if (mdf['kda'] > kdalim).any() or (mdf['win'] == winlim).any() or (mdf['use'] == uselim).any():
                         outlier += 1
                         print(f"We have an outlier.")
                     if mdf.empty:
                         mdf = "No data available."
                     else:
+                        #outlier
+                        mdf['kda'] = mdf['kda'].mask(mdf['kda'] > kdalim, "---")
                         mdf = mdf.to_string(index=False)
                     embed.add_field(name=f"Sorted by Modes:", value=f"`{mdf}`", inline=False)
 
@@ -1041,12 +1070,14 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                     edf = edf.reindex(columns=['elo', 'mode', 'region', 'win', 'use', 'kda'])
                     edf.sort_values('elo', ascending=True)
                     # Check for outlier
-                    if (edf['kda'] > 20).any() or (edf['win'] == 100).any() or (edf['use'] == 0).any():
+                    if (edf['kda'] > kdalim).any() or (edf['win'] == winlim).any() or (edf['use'] == uselim).any():
                         outlier += 1
                         print(f"We have an outlier.")
                     if edf.empty:
                         edf = "No data available."
                     else:
+                        #outlier
+                        edf['kda'] = edf['kda'].mask(edf['kda'] > kdalim, "---")
                         edf = edf.to_string(index=False)
                     embed.add_field(name=f"Sorted by Elo:", value=f"`{edf}`", inline=False)
 
@@ -1054,7 +1085,7 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                 if outlier >= 1:
                     embed.add_field(name=f":rotating_light: Outlier Notice:",
                                     value=f":bear: Teddy has detected a statistically improbable anomaly in the data you have requested."
-                                          f"\nTry using a filter such as `/td mode:Rank` to get more accurate results.",
+                                          f"\nTry using a filter such as `/tdh mode:Rank` to get more accurate results.",
                                     inline=False)
 
                 #### ADD EMBED FOR Foot
