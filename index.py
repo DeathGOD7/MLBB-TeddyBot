@@ -28,7 +28,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 logging.basicConfig(filename="/tmp/teddy.log", level=logging.INFO, format="%(asctime)s:%(levelname)s:%(message)s")
 
 #### VERSION ####
-version = "BETA Release Candidate Ver.02.02 (20211011)"
+version = "BETA Release Candidate Ver.02.03 (20211011)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -69,11 +69,6 @@ print(latest_run)
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 slash = SlashCommand(bot, sync_commands=True)
-
-@bot.event
-async def on_ready():
-    print('We have logged in as {0.user}'.format(bot))
-    logging.info('We have logged in as {0.user}'.format(bot))
 
 
 ########## MAIN TD FUNCTION ###########
@@ -287,7 +282,7 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     )
 
             helpembed.set_author(name="p3", url="https://github.com/p3hndrx",
-                                 icon_url="https://cdn.discordapp.com/avatars/336978363669282818/a_671c3452603ef87514def101b6fd3f77.gif")
+                                 icon_url="https://cdn.discordapp.com/avatars/336978363669282818/74ce51e0a6b2990a5c4153a8a7a36f37.png")
 
             await ctx.channel.send(embed=helpembed)
         else:
@@ -1096,6 +1091,20 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                 await ctx.channel.send(embed=embed)
 
 ##########################################
+
+# region INIT
+@bot.event
+async def on_ready():
+    print('We have logged in as {0.user}'.format(bot))
+    logging.info('We have logged in as {0.user}'.format(bot))
+
+    startupembed = discord.Embed(
+       title=f"***Started Teddy-{version}",
+       description=f"Everything is looking ok...\n")
+    file = discord.File("/var/www/html/hello.png", filename=f"hello.png")
+    startupembed.set_image(url=f"attachment://hello.png")
+    await bot.get_channel(853806791150665748).send(file=file, embed=startupembed)
+# endregion
 
 # region DISCORD STUFF
 # discord basic error handling:
