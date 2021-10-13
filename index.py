@@ -28,7 +28,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 logging.basicConfig(filename="/tmp/teddy.log", level=logging.INFO, format="%(asctime)s:%(levelname)s:%(message)s")
 
 #### VERSION ####
-version = "BETA Release Candidate Ver.02.03 (20211011)"
+version = "BETA Release Candidate Ver.02.10 (20211011)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -214,6 +214,32 @@ slash = SlashCommand(bot, sync_commands=True)
                      ]
                  ),
                  create_option(
+                     name="chartview",
+                     description="Look at Different Chart Views!",
+                     option_type=3,
+                     required=False,
+                     choices=[
+                         create_choice(
+                             name="Mode x WIN",
+                             value="modexwin"),
+                         create_choice(
+                             name="Mode x KDA",
+                             value="modexkda"),
+                         create_choice(
+                             name="Mode x USE",
+                             value="modexuse"),
+                        create_choice(
+                             name="Mode x WIN (box)",
+                             value="modexwinbox"),
+                         create_choice(
+                             name="Mode x KDA (box)",
+                             value="modexkdabox"),
+                         create_choice(
+                             name="Mode x USE (box)",
+                             value="modexusebox")
+                     ]
+                 ),
+                 create_option(
                      name="about",
                      description="view README",
                      option_type=3,
@@ -233,7 +259,7 @@ slash = SlashCommand(bot, sync_commands=True)
                      ]
                  )
 
-async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort="Top", role="null", view="normal", about="null"):
+async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort="Top", role="null", view="normal",chartview="null", about="null"):
     channelid = ctx.channel.id
     await ctx.send(f":bear: `Processing request...`")
     if channelid in optout:
@@ -326,190 +352,449 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                     #### Generate Thumbnail ####
                     embed.set_thumbnail(url=ico)
 
-                    ##### BUILD TABLES ####
-                    outlier = 0
-                    with open(jsonfile) as j:
-                        data = json.load(j)
-                        rows = [v for k, v in data["data"].items()]
+#CHART VIEWS
+    #CHART VIEW TYPE 1: MODE
+                    if chartview!="null" and role=="null":
+                        view = "null"
+                        box = 0
+                        md=mode.replace("All", "All-modes")
 
-                        ######## SHOW VIEW OPTIONS#
-                        if view=="meta":
-                            print(f"Request Meta View")
-                            logging.info(f"Request Meta View")
-                            embed.add_field(name=f"Meta View: ", value=f"Heroes by Lane, Use%", inline=False)
-                            for ln in lanes:
-                                report = "\n"
-                                df = pd.DataFrame(rows, columns=['urank','name', 'win', 'use', 'kda'])
-                                rslt = getattr(laning, ln)
-                                df = df[df['name'].isin(rslt)]
+                        #region Mode Conditions
+                        if chartview=="modexwin":
+                            requestchart = "Mode X Win"
+                            filename = f"{md}.win.png"
+                            charttype = "baseXmode"
 
-                                # check for outlier
-                                if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (df['use'] == uselim).any():
-                                    outlier += 1
-                                    print(f"We have an outlier.")
+                        elif chartview=="modexkda":
+                            requestchart = "Mode X KDA"
+                            filename = f"{md}.kda.png"
+                            charttype = "baseXmode"
 
-                                if ln == 'roam':
-                                    loji = '<:roam:864272305310924820>'
-                                elif ln == 'mid':
-                                    loji = '<:mid:864272305201872896>'
-                                elif ln == 'jungle':
-                                    loji = '<:jungle:864272305182212139>'
-                                elif ln == 'exp':
-                                    loji = '<:exp:864272305160716328>'
-                                elif ln == 'gold':
-                                    loji = '<:gold:864272305172381748>'
+                        elif chartview=="modexuse":
+                            requestchart = "Mode X USE"
+                            filename = f"{md}.kda.png"
+                            charttype = "baseXmode"
 
-                                if sort == "Top":
-                                    df = df.sort_values('urank', ascending=True).head(3)
-                                else:
-                                    df = df.sort_values('urank', ascending=True).tail(3)
+                        elif chartview=="modexwinbox":
+                            requestchart = "Mode X Win (box)"
+                            filename = f"{md}.win.png"
+                            charttype = "baseXmode-box"
+                            box=1
 
-                                #replace outlier with xxx
-                                #df['kda'] = df['kda'].mask(df['kda'] > kdalim, 20.0)
-                                df['kda'] = df['kda'].mask(df['kda'] > kdalim, "---")
+                        elif chartview=="modexkdabox":
+                            requestchart = "Mode X KDA (box)"
+                            filename = f"{md}.kda.png"
+                            charttype = "baseXmode-box"
+                            box=1
 
-                                #### Add Icon Column
-                                df['o'] = df['name'].str.lower()
-                                df['o'] = df['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
-                                df['-'] = df['o'].map(mojimap.moji)
-                                del df['o']
+                        elif chartview=="modexusebox":
+                            requestchart = "Mode X USE (box)"
+                            filename = f"{md}.kda.png"
+                            charttype = "baseXmode-box"
+                            box=1
+                        #endregion
 
-                                #### Add Padding and FORMAT:
-                                df['rank'] = df['urank'].astype(str)
-                                df['rank'] = ('`' + df['rank'].str.center(4) + '`')
-                                df['name'] = ('`' + df['name'].str.center(13) + '`')
-                                df['win'] = ('`' + df['win'].str.center(6) + '`')
-                                df['use'] = ('`' + df['use'].str.center(6) + '`')
-                                df['kda'] = df['kda'].astype(str)
-                                df['kda'] = ('`' + df['kda'].str.center(6) + '`')
+                        chart = f"{chartpath}{charttype}/{r}/{lvl}/{filename}"
 
-                                # REBUILD
-                                df = df.reindex(columns=['rank', '-', 'name', 'win', 'use', 'kda'])
+                        #Check to see if chart exists
+                        if not os.path.exists(chart):
+                            embed.add_field(name=f" Historical Summary:", value=f"`No Chart Available...`",
+                                            inline=False)
+                            print(f"Missing: {chart}")
+                            logging.warning(f"Missing Chart: {chart}")
 
-                                # FORMAT COLUMN HEADER
-                                r = "RANK"
-                                r = r.center(4, " ")
-                                i = "-"
-                                i = i.center(2, " ")
-                                n = "NAME"
-                                n = n.center(13, " ")
-                                w = "WIN"
-                                w = w.center(6, " ")
-                                u = "USE"
-                                u = u.center(6, " ")
-                                k = "KDA"
-                                k = k.center(6, " ")
-                                df.rename(columns={'rank': r, '-': i, 'name': n, 'win': w, 'use': u, 'kda': k}, inplace=True)
-                                df.columns = df.columns.astype(str)
-                                df.columns = ('`' + df.columns + '`')
-                                # print (df.columns)
+                            await ctx.channel.send(embed=embed)
+                        #display chart
+                        else:
 
-                                # OUTPUT TO TABLE
-                                table = df.to_string(index=False)
+                            print(f"Reading Chart: {chart}")
+                            logging.info(f"Reading Chart: {chart}")
+                            file = discord.File(chart, filename=f"{filename}")
+                            embed.set_image(url=f"attachment://{filename}")
 
-                                # print(table)
-                                report += table
+                            if box==1:
+                                embed.add_field(name=f"How to Read:",
+                                            value=f"The boxplot shows the highest and lowest values for each. The line denotes the _median_ value and the ▲ denotes the _mean_. ○ denotes outliers, if detected.",
+                                            inline=False)
 
-                                title=ln.upper()
 
-                                #### ADD EMBED FOR TABLE
-                                embed.add_field(name=f"{title} {loji}", value=f"{report}", inline=False)
+                            print(f"Request: {requestchart}")
+                            logging.info(f"Request:  {requestchart}")
+                            embed.add_field(name=f" Requesting Chart: ", value=f" {requestchart}", inline=False)
 
-                        elif view=="role":
-                            print(f"Request Role View")
-                            logging.info(f"Request Role View")
-                            embed.add_field(name=f"Role View: ", value=f"Heroes by Role, Use%", inline=False)
-                            for p in prof:
-                                report = "\n"
-                                df = pd.DataFrame(rows, columns=['urank', 'name', 'win', 'use', 'kda'])
-                                rslt = getattr(roles, p)
-                                df = df[df['name'].isin(rslt)]
+                            #### ADD EMBED FOR Foot
+                            embed.add_field(name=f"Source:",
+                                            value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
+                                            inline=False)
+                            await ctx.channel.send(file=file, embed=embed)
+    #CHART VIEW TYPE 2: ROLE
+                    elif chartview != "null" and role != "null":
+                        view = "null"
+                        box = 0
+                        md = mode.replace("All", "All-modes")
+                        role = role.capitalize()
 
-                                # check for outlier
-                                if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (
-                                        df['use'] == uselim).any():
-                                    outlier += 1
-                                    print(f"We have an outlier.")
+                        if chartview == "modexwin":
+                            requestchart = "Mode X Win"
+                            filename = f"{role}.win.png"
+                            charttype = "baseXrole"
 
-                                if p == 'support':
-                                    poji = '<:Support_Icon:864271610797490177>'
-                                elif p == 'mage':
-                                    poji = '<:Mage_Icon:864271610966179901>'
-                                elif p == 'marksman':
-                                    poji = '<:Marksman_Icon:864271610882293831>'
-                                elif p == 'assassin':
-                                    poji = '<:Assassin_Icon:864271610663272479>'
-                                elif p == 'tank':
-                                    poji = '<:Tank_Icon:864271610964738058>'
-                                elif p == 'fighter':
-                                    poji = '<:Fighter_Icon:864271610986102784>'
+                        elif chartview == "modexkda":
+                            requestchart = "Mode X KDA"
+                            filename = f"{role}.kda.png"
+                            charttype = "baseXrole"
 
-                                if sort == "Top":
-                                    df = df.sort_values('urank', ascending=True).head(3)
-                                else:
-                                    df = df.sort_values('urank', ascending=True).tail(3)
+                        elif chartview == "modexuse":
+                            requestchart = "Mode X USE"
+                            filename = f"{role}.kda.png"
+                            charttype = "baseXrole"
 
-                                #replace with xxx
-                                #df['kda'] = df['kda'].mask(df['kda'] > kdalim, 20.0)
-                                df['kda'] = df['kda'].mask(df['kda'] > kdalim, "---")
+                        elif chartview == "modexwinbox":
+                            requestchart = "Mode X Win (box)"
+                            filename = f"{role}.win.png"
+                            charttype = "baseXrole-box"
+                            box = 1
 
-                                #### Add Icon Column
-                                df['o'] = df['name'].str.lower()
-                                df['o'] = df['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
-                                df['-'] = df['o'].map(mojimap.moji)
-                                del df['o']
+                        elif chartview == "modexkdabox":
+                            requestchart = "Mode X KDA (box)"
+                            filename = f"{role}.kda.png"
+                            charttype = "baseXrole-box"
+                            box = 1
 
-                                #### Add Padding and FORMAT:
-                                df['rank'] = df['urank'].astype(str)
-                                df['rank'] = ('`' + df['rank'].str.center(4) + '`')
-                                df['name'] = ('`' + df['name'].str.center(13) + '`')
-                                df['win'] = ('`' + df['win'].str.center(6) + '`')
-                                df['use'] = ('`' + df['use'].str.center(6) + '`')
-                                df['kda'] = df['kda'].astype(str)
-                                df['kda'] = ('`' + df['kda'].str.center(6) + '`')
+                        elif chartview == "modexusebox":
+                            requestchart = "Mode X USE (box)"
+                            filename = f"{role}.kda.png"
+                            charttype = "baseXrole-box"
+                            box = 1
 
-                                # REBUILD
-                                df = df.reindex(columns=['rank', '-', 'name', 'win', 'use', 'kda'])
+                        chart = f"{chartpath}{charttype}/{r}/{m}/{lvl}/{filename}"
 
-                                # FORMAT COLUMN HEADER
-                                r = "RANK"
-                                r = r.center(4, " ")
-                                i = "-"
-                                i = i.center(2, " ")
-                                n = "NAME"
-                                n = n.center(13, " ")
-                                w = "WIN"
-                                w = w.center(6, " ")
-                                u = "USE"
-                                u = u.center(6, " ")
-                                k = "KDA"
-                                k = k.center(6, " ")
-                                df.rename(columns={'rank': r, '-': i, 'name': n, 'win': w, 'use': u, 'kda': k}, inplace=True)
-                                df.columns = df.columns.astype(str)
-                                df.columns = ('`' + df.columns + '`')
-                                # print (df.columns)
+                            # Check to see if chart exists
+                        if not os.path.exists(chart):
+                            embed.add_field(name=f" Historical Summary:", value=f"`No Chart Available...`",
+                                                inline=False)
+                            print(f"Missing: {chart}")
+                            logging.warning(f"Missing Chart: {chart}")
 
-                                # OUTPUT TO TABLE
-                                table = df.to_string(index=False)
+                            await ctx.channel.send(embed=embed)
+                        # display chart
+                        else:
 
-                                # print(table)
-                                report += table
+                            print(f"Reading Chart: {chart}")
+                            logging.info(f"Reading Chart: {chart}")
+                            file = discord.File(chart, filename=f"{filename}")
+                            embed.set_image(url=f"attachment://{filename}")
 
-                                title=p.upper()
+                            if box == 1:
+                                embed.add_field(name=f"How to Read:",
+                                                value=f"The boxplot shows the highest and lowest values for each. The line denotes the _median_ value and the ▲ denotes the _mean_. ○ denotes outliers, if detected.",
+                                                inline=False)
 
-                                #### ADD EMBED FOR TABLE
-                                embed.add_field(name=f"{title} {poji}", value=f"{report}", inline=False)
 
-                        elif view=="normal":
-                            print(f"Request Normal View")
-                            logging.info(f"Request Normal View")
-                            for crit in sort_by:
+                            print(f"Request: {requestchart}")
+                            logging.info(f"Request:  {requestchart}")
+                            embed.add_field(name=f" Requesting Chart: ", value=f" {requestchart}", inline=False)
+
+                            #### ADD EMBED FOR Foot
+                            embed.add_field(name=f"Source:",
+                                            value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
+                                            inline=False)
+
+                            await ctx.channel.send(file=file, embed=embed)
+
+### NORMAL FUNCTION
+                    else:
+
+                        ##### BUILD TABLES ####
+                        outlier = 0
+                        with open(jsonfile) as j:
+                            data = json.load(j)
+                            rows = [v for k, v in data["data"].items()]
+
+                            ######## SHOW VIEW OPTIONS#
+                            if view=="meta":
+                                print(f"Request Meta View")
+                                logging.info(f"Request Meta View")
+                                embed.add_field(name=f"Meta View: ", value=f"Heroes by Lane, Use%", inline=False)
+                                for ln in lanes:
+                                    report = "\n"
+                                    df = pd.DataFrame(rows, columns=['urank','name', 'win', 'use', 'kda'])
+                                    rslt = getattr(laning, ln)
+                                    df = df[df['name'].isin(rslt)]
+
+                                    # check for outlier
+                                    if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (df['use'] == uselim).any():
+                                        outlier += 1
+                                        print(f"We have an outlier.")
+
+                                    if ln == 'roam':
+                                        loji = '<:roam:864272305310924820>'
+                                    elif ln == 'mid':
+                                        loji = '<:mid:864272305201872896>'
+                                    elif ln == 'jungle':
+                                        loji = '<:jungle:864272305182212139>'
+                                    elif ln == 'exp':
+                                        loji = '<:exp:864272305160716328>'
+                                    elif ln == 'gold':
+                                        loji = '<:gold:864272305172381748>'
+
+                                    if sort == "Top":
+                                        df = df.sort_values('urank', ascending=True).head(3)
+                                    else:
+                                        df = df.sort_values('urank', ascending=True).tail(3)
+
+                                    #replace outlier with xxx
+                                    #df['kda'] = df['kda'].mask(df['kda'] > kdalim, 20.0)
+                                    df['kda'] = df['kda'].mask(df['kda'] > kdalim, "---")
+
+                                    #### Add Icon Column
+                                    df['o'] = df['name'].str.lower()
+                                    df['o'] = df['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
+                                    df['-'] = df['o'].map(mojimap.moji)
+                                    del df['o']
+
+                                    #### Add Padding and FORMAT:
+                                    df['rank'] = df['urank'].astype(str)
+                                    df['rank'] = ('`' + df['rank'].str.center(4) + '`')
+                                    df['name'] = ('`' + df['name'].str.center(13) + '`')
+                                    df['win'] = ('`' + df['win'].str.center(6) + '`')
+                                    df['use'] = ('`' + df['use'].str.center(6) + '`')
+                                    df['kda'] = df['kda'].astype(str)
+                                    df['kda'] = ('`' + df['kda'].str.center(6) + '`')
+
+                                    # REBUILD
+                                    df = df.reindex(columns=['rank', '-', 'name', 'win', 'use', 'kda'])
+
+                                    # FORMAT COLUMN HEADER
+                                    r = "RANK"
+                                    r = r.center(4, " ")
+                                    i = "-"
+                                    i = i.center(2, " ")
+                                    n = "NAME"
+                                    n = n.center(13, " ")
+                                    w = "WIN"
+                                    w = w.center(6, " ")
+                                    u = "USE"
+                                    u = u.center(6, " ")
+                                    k = "KDA"
+                                    k = k.center(6, " ")
+                                    df.rename(columns={'rank': r, '-': i, 'name': n, 'win': w, 'use': u, 'kda': k}, inplace=True)
+                                    df.columns = df.columns.astype(str)
+                                    df.columns = ('`' + df.columns + '`')
+                                    # print (df.columns)
+
+                                    # OUTPUT TO TABLE
+                                    table = df.to_string(index=False)
+
+                                    # print(table)
+                                    report += table
+
+                                    title=ln.upper()
+
+                                    #### ADD EMBED FOR TABLE
+                                    embed.add_field(name=f"{title} {loji}", value=f"{report}", inline=False)
+
+                            elif view=="role":
+                                print(f"Request Role View")
+                                logging.info(f"Request Role View")
+                                embed.add_field(name=f"Role View: ", value=f"Heroes by Role, Use%", inline=False)
+                                for p in prof:
+                                    report = "\n"
+                                    df = pd.DataFrame(rows, columns=['urank', 'name', 'win', 'use', 'kda'])
+                                    rslt = getattr(roles, p)
+                                    df = df[df['name'].isin(rslt)]
+
+                                    # check for outlier
+                                    if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (
+                                            df['use'] == uselim).any():
+                                        outlier += 1
+                                        print(f"We have an outlier.")
+
+                                    if p == 'support':
+                                        poji = '<:Support_Icon:864271610797490177>'
+                                    elif p == 'mage':
+                                        poji = '<:Mage_Icon:864271610966179901>'
+                                    elif p == 'marksman':
+                                        poji = '<:Marksman_Icon:864271610882293831>'
+                                    elif p == 'assassin':
+                                        poji = '<:Assassin_Icon:864271610663272479>'
+                                    elif p == 'tank':
+                                        poji = '<:Tank_Icon:864271610964738058>'
+                                    elif p == 'fighter':
+                                        poji = '<:Fighter_Icon:864271610986102784>'
+
+                                    if sort == "Top":
+                                        df = df.sort_values('urank', ascending=True).head(3)
+                                    else:
+                                        df = df.sort_values('urank', ascending=True).tail(3)
+
+                                    #replace with xxx
+                                    #df['kda'] = df['kda'].mask(df['kda'] > kdalim, 20.0)
+                                    df['kda'] = df['kda'].mask(df['kda'] > kdalim, "---")
+
+                                    #### Add Icon Column
+                                    df['o'] = df['name'].str.lower()
+                                    df['o'] = df['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
+                                    df['-'] = df['o'].map(mojimap.moji)
+                                    del df['o']
+
+                                    #### Add Padding and FORMAT:
+                                    df['rank'] = df['urank'].astype(str)
+                                    df['rank'] = ('`' + df['rank'].str.center(4) + '`')
+                                    df['name'] = ('`' + df['name'].str.center(13) + '`')
+                                    df['win'] = ('`' + df['win'].str.center(6) + '`')
+                                    df['use'] = ('`' + df['use'].str.center(6) + '`')
+                                    df['kda'] = df['kda'].astype(str)
+                                    df['kda'] = ('`' + df['kda'].str.center(6) + '`')
+
+                                    # REBUILD
+                                    df = df.reindex(columns=['rank', '-', 'name', 'win', 'use', 'kda'])
+
+                                    # FORMAT COLUMN HEADER
+                                    r = "RANK"
+                                    r = r.center(4, " ")
+                                    i = "-"
+                                    i = i.center(2, " ")
+                                    n = "NAME"
+                                    n = n.center(13, " ")
+                                    w = "WIN"
+                                    w = w.center(6, " ")
+                                    u = "USE"
+                                    u = u.center(6, " ")
+                                    k = "KDA"
+                                    k = k.center(6, " ")
+                                    df.rename(columns={'rank': r, '-': i, 'name': n, 'win': w, 'use': u, 'kda': k}, inplace=True)
+                                    df.columns = df.columns.astype(str)
+                                    df.columns = ('`' + df.columns + '`')
+                                    # print (df.columns)
+
+                                    # OUTPUT TO TABLE
+                                    table = df.to_string(index=False)
+
+                                    # print(table)
+                                    report += table
+
+                                    title=p.upper()
+
+                                    #### ADD EMBED FOR TABLE
+                                    embed.add_field(name=f"{title} {poji}", value=f"{report}", inline=False)
+
+                            elif view=="normal":
+                                print(f"Request Normal View")
+                                logging.info(f"Request Normal View")
+                                for crit in sort_by:
+                                    report = "\n"
+                                    df = pd.DataFrame(rows, columns=[str(crit), 'name', 'win', 'use', 'kda'])
+
+                                    # check for outlier
+                                    if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (
+                                            df['use'] == uselim).any():
+                                        outlier += 1
+                                        print(f"We have an outlier.")
+
+                                    # filter by role
+                                    if role != "null":
+                                        rslt = getattr(roles, role)
+                                        # print(rslt)
+                                        df = df[df['name'].isin(rslt)]
+
+                                        if role == 'support':
+                                            imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/f/ff/Support_Icon.png'
+                                        elif role == 'mage':
+                                            imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/5/53/Mage_Icon.png'
+                                        elif role == 'marksman':
+                                            imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/1/10/Marksman_Icon.png'
+                                        elif role == 'assassin':
+                                            imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/3/3f/Assassin_Icon.png'
+                                        elif role == 'tank':
+                                            imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/f/f0/Tank_Icon.png'
+                                        elif role == 'fighter':
+                                            imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/1/1a/Fighter_Icon.png'
+
+                                        embed.set_author(name=f"Filter by {role.upper()}", icon_url=imgurl)
+
+                                        # sort
+                                    if sort == "Top":
+                                        df = df.sort_values(str(crit), ascending=True).head(5)
+                                    else:
+                                        df = df.sort_values(str(crit), ascending=True).tail(5)
+
+                                    #replace with xxx
+                                    #df['kda'] = df['kda'].mask(df['kda'] > kdalim, 20.0)
+                                    df['kda'] = df['kda'].mask(df['kda'] > kdalim, "---")
+
+                                    #### Add Icon Column
+                                    df['o'] = df['name'].str.lower()
+                                    df['o'] = df['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
+                                    df['-'] = df['o'].map(mojimap.moji)
+                                    del df['o']
+
+                                    #### Add Padding and FORMAT:
+                                    df['rank'] = df[str(crit)].astype(str)
+                                    df['rank'] = ('`' + df['rank'].str.center(4) + '`')
+                                    df['name'] = ('`' + df['name'].str.center(13) + '`')
+                                    df['win'] = ('`' + df['win'].str.center(6) + '`')
+                                    df['use'] = ('`' + df['use'].str.center(6) + '`')
+                                    df['kda'] = df['kda'].astype(str)
+                                    df['kda'] = ('`' + df['kda'].str.center(6) + '`')
+
+                                    # REBUILD
+                                    df = df.reindex(columns=['rank', '-', 'name', 'win', 'use', 'kda'])
+
+                                    # FORMAT COLUMN HEADER
+                                    r = "RANK"
+                                    r = r.center(4, " ")
+                                    i = "-"
+                                    i = i.center(2, " ")
+                                    n = "NAME"
+                                    n = n.center(13, " ")
+                                    w = "WIN"
+                                    w = w.center(6, " ")
+                                    u = "USE"
+                                    u = u.center(6, " ")
+                                    k = "KDA"
+                                    k = k.center(6, " ")
+                                    df.rename(columns={'rank': r, '-': i, 'name': n, 'win': w, 'use': u, 'kda': k}, inplace=True)
+                                    df.columns = df.columns.astype(str)
+                                    df.columns = ('`' + df.columns + '`')
+                                    # print (df.columns)
+
+                                    # OUTPUT TO TABLE
+                                    table = df.to_string(index=False)
+
+                                    # print(table)
+                                    report += table
+
+                                    #### Create Report Title
+                                    if crit == "wrank":
+                                        title = "WinRate%"
+                                    elif crit == "kdarank":
+                                        title = "KDA"
+                                    elif crit == "urank":
+                                        title = "Use%"
+
+                                    #### ADD EMBED FOR TABLE
+                                    embed.add_field(name=f"Sorted by {title}", value=f"{report}", inline=False)
+
+                            elif view=="win" or view=="kda" or view=="use":
+                                if view == "win":
+                                    crit = "wrank"
+                                    title = "WinRate"
+                                elif view=="kda":
+                                    crit = "kdarank"
+                                    title = "KDA"
+                                elif view =="use":
+                                    crit = "urank"
+                                    title = "USE"
+
+                                print(f"Request {title} View")
+                                logging.info(f"Request WinRate View")
+
                                 report = "\n"
                                 df = pd.DataFrame(rows, columns=[str(crit), 'name', 'win', 'use', 'kda'])
 
                                 # check for outlier
-                                if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (
-                                        df['use'] == uselim).any():
+                                if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (df['use'] == uselim).any():
                                     outlier += 1
                                     print(f"We have an outlier.")
 
@@ -536,9 +821,9 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
 
                                     # sort
                                 if sort == "Top":
-                                    df = df.sort_values(str(crit), ascending=True).head(5)
+                                    df = df.sort_values(str(crit), ascending=True).head(10)
                                 else:
-                                    df = df.sort_values(str(crit), ascending=True).tail(5)
+                                    df = df.sort_values(str(crit), ascending=True).tail(10)
 
                                 #replace with xxx
                                 #df['kda'] = df['kda'].mask(df['kda'] > kdalim, 20.0)
@@ -586,132 +871,27 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 # print(table)
                                 report += table
 
-                                #### Create Report Title
-                                if crit == "wrank":
-                                    title = "WinRate%"
-                                elif crit == "kdarank":
-                                    title = "KDA"
-                                elif crit == "urank":
-                                    title = "Use%"
+
 
                                 #### ADD EMBED FOR TABLE
                                 embed.add_field(name=f"Sorted by {title}", value=f"{report}", inline=False)
+                                #print(f"{report}")
+                        #### ADD EMBED FOR OUTLIER
+                        if outlier >= 1:
+                            embed.add_field(name=f":rotating_light: Outlier Notice:",
+                                            value=f":bear: Teddy has detected a statistically improbable anomaly in the data you have requested."
+                                                  f"\nTry using a filter such as `/td mode:Rank` to get more accurate results.",
+                                            inline=False)
 
-                        elif view=="win" or view=="kda" or view=="use":
-                            if view == "win":
-                                crit = "wrank"
-                                title = "WinRate"
-                            elif view=="kda":
-                                crit = "kdarank"
-                                title = "KDA"
-                            elif view =="use":
-                                crit = "urank"
-                                title = "USE"
-
-                            print(f"Request {title} View")
-                            logging.info(f"Request WinRate View")
-
-                            report = "\n"
-                            df = pd.DataFrame(rows, columns=[str(crit), 'name', 'win', 'use', 'kda'])
-
-                            # check for outlier
-                            if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (df['use'] == uselim).any():
-                                outlier += 1
-                                print(f"We have an outlier.")
-
-                            # filter by role
-                            if role != "null":
-                                rslt = getattr(roles, role)
-                                # print(rslt)
-                                df = df[df['name'].isin(rslt)]
-
-                                if role == 'support':
-                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/f/ff/Support_Icon.png'
-                                elif role == 'mage':
-                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/5/53/Mage_Icon.png'
-                                elif role == 'marksman':
-                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/1/10/Marksman_Icon.png'
-                                elif role == 'assassin':
-                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/3/3f/Assassin_Icon.png'
-                                elif role == 'tank':
-                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/f/f0/Tank_Icon.png'
-                                elif role == 'fighter':
-                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/1/1a/Fighter_Icon.png'
-
-                                embed.set_author(name=f"Filter by {role.upper()}", icon_url=imgurl)
-
-                                # sort
-                            if sort == "Top":
-                                df = df.sort_values(str(crit), ascending=True).head(10)
-                            else:
-                                df = df.sort_values(str(crit), ascending=True).tail(10)
-
-                            #replace with xxx
-                            #df['kda'] = df['kda'].mask(df['kda'] > kdalim, 20.0)
-                            df['kda'] = df['kda'].mask(df['kda'] > kdalim, "---")
-
-                            #### Add Icon Column
-                            df['o'] = df['name'].str.lower()
-                            df['o'] = df['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
-                            df['-'] = df['o'].map(mojimap.moji)
-                            del df['o']
-
-                            #### Add Padding and FORMAT:
-                            df['rank'] = df[str(crit)].astype(str)
-                            df['rank'] = ('`' + df['rank'].str.center(4) + '`')
-                            df['name'] = ('`' + df['name'].str.center(13) + '`')
-                            df['win'] = ('`' + df['win'].str.center(6) + '`')
-                            df['use'] = ('`' + df['use'].str.center(6) + '`')
-                            df['kda'] = df['kda'].astype(str)
-                            df['kda'] = ('`' + df['kda'].str.center(6) + '`')
-
-                            # REBUILD
-                            df = df.reindex(columns=['rank', '-', 'name', 'win', 'use', 'kda'])
-
-                            # FORMAT COLUMN HEADER
-                            r = "RANK"
-                            r = r.center(4, " ")
-                            i = "-"
-                            i = i.center(2, " ")
-                            n = "NAME"
-                            n = n.center(13, " ")
-                            w = "WIN"
-                            w = w.center(6, " ")
-                            u = "USE"
-                            u = u.center(6, " ")
-                            k = "KDA"
-                            k = k.center(6, " ")
-                            df.rename(columns={'rank': r, '-': i, 'name': n, 'win': w, 'use': u, 'kda': k}, inplace=True)
-                            df.columns = df.columns.astype(str)
-                            df.columns = ('`' + df.columns + '`')
-                            # print (df.columns)
-
-                            # OUTPUT TO TABLE
-                            table = df.to_string(index=False)
-
-                            # print(table)
-                            report += table
-
-
-
-                            #### ADD EMBED FOR TABLE
-                            embed.add_field(name=f"Sorted by {title}", value=f"{report}", inline=False)
-                            #print(f"{report}")
-                    #### ADD EMBED FOR OUTLIER
-                    if outlier >= 1:
-                        embed.add_field(name=f":rotating_light: Outlier Notice:",
-                                        value=f":bear: Teddy has detected a statistically improbable anomaly in the data you have requested."
-                                              f"\nTry using a filter such as `/td mode:Rank` to get more accurate results.",
+                        #### ADD EMBED FOR Foot
+                        embed.add_field(name=f"Source:",
+                                        value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
                                         inline=False)
 
-                    #### ADD EMBED FOR Foot
-                    embed.add_field(name=f"Source:",
-                                    value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
-                                    inline=False)
+                        #### SEND EMBED ####
+                        await ctx.channel.send(embed=embed)
 
-                    #### SEND EMBED ####
-                    await ctx.channel.send(embed=embed)
-
+# MISSING JSON
                 else:
                     print(f"Bad Request: Missing: {jsonfile}")
                     logging.warning(f"Bad Request: Missing: {jsonfile}")
@@ -723,10 +903,12 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                     embed.add_field(name=f"No TierData Found", value=f"Source file missing. Please try again after the next data sync or refine your search.", inline=False)
                     await ctx.channel.send(embed=embed)
                     #await ctx.channel.send(content="```No TierData Found...```")
+# MISSING FOLDER
             else:
                 print(f"Bad Request: Missing: {latest_run}")
                 logging.warning(f"Bad Request: Missing: {latest_run}")
                 await ctx.channel.send(content="```No TierData Reported Yet...```")
+
 
 ########## MAIN HERO FUNCTION ###########
 
