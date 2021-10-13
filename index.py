@@ -28,7 +28,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 logging.basicConfig(filename="/tmp/teddy.log", level=logging.INFO, format="%(asctime)s:%(levelname)s:%(message)s")
 
 #### VERSION ####
-version = "BETA Release Candidate Ver.02.10 (20211011)"
+version = "BETA Release Candidate Ver.02.101 (20211011)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -373,7 +373,7 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
 
                         elif chartview=="modexuse":
                             requestchart = "Mode X USE"
-                            filename = f"{md}.kda.png"
+                            filename = f"{md}.use.png"
                             charttype = "baseXmode"
 
                         elif chartview=="modexwinbox":
@@ -390,7 +390,7 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
 
                         elif chartview=="modexusebox":
                             requestchart = "Mode X USE (box)"
-                            filename = f"{md}.kda.png"
+                            filename = f"{md}.use.png"
                             charttype = "baseXmode-box"
                             box=1
                         #endregion
@@ -447,7 +447,7 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
 
                         elif chartview == "modexuse":
                             requestchart = "Mode X USE"
-                            filename = f"{role}.kda.png"
+                            filename = f"{role}.use.png"
                             charttype = "baseXrole"
 
                         elif chartview == "modexwinbox":
@@ -464,7 +464,7 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
 
                         elif chartview == "modexusebox":
                             requestchart = "Mode X USE (box)"
-                            filename = f"{role}.kda.png"
+                            filename = f"{role}.use.png"
                             charttype = "baseXrole-box"
                             box = 1
 
