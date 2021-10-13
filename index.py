@@ -50,6 +50,7 @@ today = x.strftime("%Y%m%d")
 rawpath = "/var/www/html/TierData/json/"
 histpath = "/var/www/html/timeline/summary/"
 avgpath = "/var/www/html/timeline/averages/"
+chartpath = "/var/www/html/reports/"
 
 prof = ["assassin","marksman","mage","tank","support","fighter"]
 lanes = ["gold","exp","mid","jungle","roam"]
