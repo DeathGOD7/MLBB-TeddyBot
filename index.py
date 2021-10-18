@@ -114,8 +114,7 @@ print(latest_run)
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 slash = SlashCommand(bot, sync_commands=True)
 
-
-########## MAIN TD FUNCTION ###########
+# region MAIN TD FUNCTION
 @slash.slash(name="td",
              description="Use this command to get the most recent TierData!.",
              guild_ids=guild_ids,
@@ -372,7 +371,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                 #### FIND FILE
                 jsonfile = f'{latest_run}/en/{r}/{period}.{lvl}.{m}.json'
                 if os.path.exists(jsonfile):
-                    #print("Requesting: " + jsonfile)
                     log.info("Requesting: " + jsonfile)
 
                     runtime = latest_run.replace(rawpath, "")
@@ -449,14 +447,11 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                         if not os.path.exists(chart):
                             embed.add_field(name=f" Historical Summary:", value=f"`No Chart Available...`",
                                             inline=False)
-                            #print(f"Missing: {chart}")
                             log.warning(f"Missing Chart: {chart}")
 
                             await ctx.channel.send(embed=embed)
                         #display chart
                         else:
-
-                            #print(f"Reading Chart: {chart}")
                             log.info(f"Reading Chart: {chart}")
                             file = discord.File(chart, filename=f"{filename}")
                             embed.set_image(url=f"attachment://{filename}")
@@ -465,9 +460,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 embed.add_field(name=f"How to Read:",
                                             value=f"The boxplot shows the highest and lowest values for each. The line denotes the _median_ value and the ▲ denotes the _mean_. ○ denotes outliers, if detected.",
                                             inline=False)
-
-
-                            #print(f"Request: {requestchart}")
                             log.info(f"Request:  {requestchart}")
                             embed.add_field(name=f" Requesting Chart: ", value=f" {requestchart}", inline=False)
 
@@ -522,14 +514,11 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                         if not os.path.exists(chart):
                             embed.add_field(name=f" Historical Summary:", value=f"`No Chart Available...`",
                                                 inline=False)
-                            #print(f"Missing: {chart}")
                             log.warning(f"Missing Chart: {chart}")
 
                             await ctx.channel.send(embed=embed)
                         # display chart
                         else:
-
-                            #print(f"Reading Chart: {chart}")
                             log.info(f"Reading Chart: {chart}")
                             file = discord.File(chart, filename=f"{filename}")
                             embed.set_image(url=f"attachment://{filename}")
@@ -539,8 +528,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                                 value=f"The boxplot shows the highest and lowest values for each. The line denotes the _median_ value and the ▲ denotes the _mean_. ○ denotes outliers, if detected.",
                                                 inline=False)
 
-
-                            #print(f"Request: {requestchart}")
                             log.info(f"Request:  {requestchart}")
                             embed.add_field(name=f" Requesting Chart: ", value=f" {requestchart}", inline=False)
 
@@ -562,7 +549,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
 
                             ######## SHOW VIEW OPTIONS#
                             if view=="meta":
-                                #print(f"Request Meta View")
                                 log.info(f"Request Meta View")
                                 embed.add_field(name=f"Meta View: ", value=f"Heroes by Lane, Use%", inline=False)
                                 for ln in lanes:
@@ -574,7 +560,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     # check for outlier
                                     if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (df['use'] == uselim).any():
                                         outlier += 1
-                                        #print(f"We have an outlier.")
 
                                     if ln == 'roam':
                                         loji = '<:roam:864272305310924820>'
@@ -644,7 +629,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     embed.add_field(name=f"{title} {loji}", value=f"{report}", inline=False)
 
                             elif view=="role":
-                                #print(f"Request Role View")
                                 log.info(f"Request Role View")
                                 embed.add_field(name=f"Role View: ", value=f"Heroes by Role, Use%", inline=False)
                                 for p in prof:
@@ -657,7 +641,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (
                                             df['use'] == uselim).any():
                                         outlier += 1
-                                        #print(f"We have an outlier.")
                                         log.info(f"We have an outlier.")
 
                                     if p == 'support':
@@ -730,7 +713,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     embed.add_field(name=f"{title} {poji}", value=f"{report}", inline=False)
 
                             elif view=="normal":
-                                #print(f"Request Normal View")
                                 log.info(f"Request Normal View")
                                 for crit in sort_by:
                                     report = "\n"
@@ -740,7 +722,7 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (
                                             df['use'] == uselim).any():
                                         outlier += 1
-                                        #print(f"We have an outlier.")
+
                                         log.info(f"We have an outlier.")
 
                                     # filter by role
@@ -838,7 +820,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     crit = "urank"
                                     title = "USE"
 
-                                #print(f"Request {title} View")
                                 log.info(f"Request {title} View")
 
                                 report = "\n"
@@ -847,7 +828,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 # check for outlier
                                 if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (df['use'] == uselim).any():
                                     outlier += 1
-                                    #print(f"We have an outlier.")
                                     log.info(f"We have an outlier.")
 
                                 # filter by role
@@ -928,6 +908,7 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 #### ADD EMBED FOR TABLE
                                 embed.add_field(name=f"Sorted by {title}", value=f"{report}", inline=False)
                                 #print(f"{report}")
+
                         #### ADD EMBED FOR OUTLIER
                         if outlier >= 1:
                             embed.add_field(name=f":rotating_light: Outlier Notice:",
@@ -945,7 +926,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
 
 # MISSING JSON
                 else:
-                    #print(f"Bad Request: Missing: {jsonfile}")
                     log.warning(f"Bad Request: Missing: {jsonfile}")
                     embed = discord.Embed(
                         title=f"{mode} TierData for {dt}",
@@ -957,22 +937,18 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                     #await ctx.channel.send(content="```No TierData Found...```")
 # MISSING FOLDER
             else:
-                #print(f"Bad Request: Missing: {latest_run}")
                 log.warning(f"Bad Request: Missing: {latest_run}")
                 await ctx.channel.send(content="```No TierData Reported Yet...```")
 
-
-########## MAIN HERO FUNCTION ###########
+# endregion
 
 # region HERO TABLE GENERATOR
 regions = ["all", "NA", "SA", "SE", "EU"]
-##modes = ["All-Modes", "rank", "brawl", "Classic"]
 modes = ["All-Modes", "Rank", "Brawl", "Classic"]
 lvls = ["All-Levels", "Normal", "High", "Very-High"]
 periods = ["Week", "AT", "Month"]
 
 # COMPILE HERO TABLES
-#print("Compiling Lookup")
 log.info("Compiling Lookup")
 
 # Create master table
@@ -1006,18 +982,15 @@ if os.path.isdir(latest_run):  # check for raw data path
                             # print(df)
 
                     else:
-                        #print(f"Bad Request: Missing: {jsonfile}")
                         log.warning(f"Bad Request: Missing: {jsonfile}")
     # print(f"Combined:{dfx}")
 else:
-    #print(f"Bad Request: Missing: {latest_run}")
     log.warning(f"Bad Request: Missing: {latest_run}")
 
-#print(dfx)
 log.debug(f"{dfx}")
 # endregion
 
-### START HERO FUNCTION
+# region HERO SEARCH FUNCTION
 @slash.slash(name="tdh",
              description="This is a TierData Lookup by Hero",
              options=[
@@ -1144,7 +1117,6 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
             audit.info(f"{user},ddh,{region},{mode},{elo},{period},,,,,,{show},{hn}")
             log.info(f"{user} used /ddh")
 
-            #print(f"Looking for... {hn}")
             log.info(f"Looking for... {hn}")
             hnl = hn.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()
 
@@ -1184,7 +1156,6 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
 
                 if not os.path.exists(chart):
                     embed.add_field(name=f" {ico} Historical Summary:", value=f"`No Chart Available...`", inline=False)
-                    #print(f"Missing: {chart}")
                     log.warning(f"Missing Chart: {chart}")
 
                     #### ADD EMBED FOR Foot
@@ -1197,7 +1168,6 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                 else:
                     embed.add_field(name=f" {ico} Historical Summary:", value=f"Changes in Win%, Use%, KDA over Time.",
                                 inline=False)
-                    #print(f"Reading Chart: {chart}")
                     log.info(f"Reading Chart: {chart}")
                     file = discord.File(chart, filename=f"{hnl}.png")
                     embed.set_image(url=f"attachment://{hnl}.png")
@@ -1215,7 +1185,6 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
 
                 if not os.path.exists(chart):
                     embed.add_field(name=f" {ico} Historical Summary:", value=f"`No Chart Available...`", inline=False)
-                    #print(f"Missing: {chart}")
                     log.warning(f"Missing Chart: {chart}")
 
                     #### ADD EMBED FOR Foot
@@ -1229,7 +1198,6 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                     embed.add_field(name=f" {ico} Statistical Summary:",
                                     value=f"Averages in Win%, Use%, KDA over Time.",
                                     inline=False)
-                    #print(f"Reading Chart: {chart}")
                     log.info(f"Reading Chart: {chart}")
                     file = discord.File(chart, filename=f"{hnl}.png")
                     embed.set_image(url=f"attachment://{hnl}.png")
@@ -1259,7 +1227,6 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                 #Check for outlier
                 if (sumdf['kda'] > kdalim).any() or (sumdf['win'] == winlim).any() or (sumdf['use'] == uselim).any():
                     outlier += 1
-                    #print(f"We have an outlier.")
                     log.info(f"We have an outlier.")
 
                 if sumdf.empty:
@@ -1278,7 +1245,6 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                     # Check for outlier
                     if (rdf['kda'] > kdalim).any() or (rdf['win'] == winlim).any() or (rdf['use'] == uselim).any():
                         outlier += 1
-                        #print(f"We have an outlier.")
                         log.info(f"We have an outlier.")
                     if rdf.empty:
                         rdf = "No data available."
@@ -1295,7 +1261,6 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                     # Check for outlier
                     if (mdf['kda'] > kdalim).any() or (mdf['win'] == winlim).any() or (mdf['use'] == uselim).any():
                         outlier += 1
-                        #print(f"We have an outlier.")
                         log.info(f"We have an outlier.")
                     if mdf.empty:
                         mdf = "No data available."
@@ -1312,7 +1277,6 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                     # Check for outlier
                     if (edf['kda'] > kdalim).any() or (edf['win'] == winlim).any() or (edf['use'] == uselim).any():
                         outlier += 1
-                        #print(f"We have an outlier.")
                         log.info(f"We have an outlier.")
                     if edf.empty:
                         edf = "No data available."
@@ -1336,12 +1300,11 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
 
                 await ctx.channel.send(embed=embed)
 
-##########################################
+# endregion
 
 # region INIT
 @bot.event
 async def on_ready():
-    #print('We have logged in as {0.user}'.format(bot))
     log.info('We have logged in as {0.user}'.format(bot))
 
     startupembed = discord.Embed(
