@@ -101,6 +101,7 @@ list = [
 'Tigreal',
 'Uranus',
 'Vale',
+'Valentina',
 'Valir',
 'Vexana',
 'Wanwan',
