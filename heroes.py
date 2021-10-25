@@ -1,5 +1,4 @@
-list = [
-'Aamon',
+list = ['Aamon',
 'Akai',
 'Aldous',
 'Alice',
@@ -88,6 +87,7 @@ list = [
 'Paquito',
 'Pharsa',
 'Phoveus',
+'Phylax',
 'Popol and Kupa',
 'Rafaela',
 'Roger',
@@ -110,5 +110,4 @@ list = [
 'Yu Zhong',
 'Yve',
 'Zhask',
-'Zilong'
-]
+'Zilong']

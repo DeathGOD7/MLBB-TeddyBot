@@ -70,8 +70,8 @@ else:
     log.info(f"Found log at: {auditpath}")
 # endregion
 
-#### VERSION ####
-version = "BETA Release Candidate Ver.02.103 (20211018)"
+# region VERSION ####
+version = "BETA Release Candidate Ver.02.105 (20211018)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -291,6 +291,9 @@ slash = SlashCommand(bot, sync_commands=True)
                          create_choice(
                              name="Teddy",
                              value="show"),
+                        create_choice(
+                             name="Commands",
+                             value="commands"),
                          create_choice(
                              name="The Data",
                              value="data"),
@@ -321,10 +324,23 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                 desc = "Teddy (aka 'TD') is a MLBB TierData Bot made exclusively for the MLBB NA Discord Server.\n\n"
             elif about=="data":
                 about_title = "The Data"
-                desc = "TierData is provided by https://m.mobilelegends.com/en/rank through an API. Teddy fully synchronizes the data every 48 hours which is initially summarized by **period**: \nWeek, Month, and All-Time. \
+                desc = "TierData is provided by https://m.mobilelegends.com/en/rank through an API. Teddy fully synchronizes the data every week which is initially summarized by **period**: \nWeek, Month, and All-Time. \
                               \n\nThe data is further sorted by the following attributes: \n**elo** (Normal, High, Very-High), \n**mode** (Classic, Rank, Brawl), \n**region** (EU,NA,SA,and SE.) \
                               \n\nAll together, this makes-up 384 datasets with over 24000 datapoints! \
                               \nIf you get a warning `No TierData Found.`. \nDon't worry! This means that the specific data file is *missing* and is likely being synchronized, so please be patient!"
+            elif about=="commands":
+                about_title = "Commands"
+                desc = "Command Options List:\
+                       \n\n`/td` - Show KDA/WR%/USE% for this Week \
+                       \n- `region:(NA,SA,SE,EU)`, default:`All` \
+                       \n- `mode:(Brawl,Classic,Rank)`, default: `All-Modes` \
+                       \n- `elo:(Normal,High,Very-High)`, default: `All-Levels` \
+                       \n- `period:(Month,Week,All-Time)`, default: `Week` \
+                       \n- `sort:(Top, Bottom)`, default: Top \
+                       \n- `role:(Fighter,Mage,Support,Assassin,Marksman,Tank)`, default: `none` \
+                       \n- `view:(Normal,Meta,Role,WinRate,KDA,Use)` default: `Normal` - The view changes from top5 KDA/WR/USE, top10 by KDA,WR,or USE, or top3 by Meta or Role \
+                       \n- `chartview:`(Mode x WIN/KDA/USE)+(box optional)`, default: `none` - Historical chart or averages, based on Top5 for each filter"
+
             elif about=="outlier":
                 about_title = "Outliers"
                 desc = "Occasionally, you may see an extremely high statistic like... 40 KDA?!? \n*How does this happen?* \
@@ -1084,9 +1100,23 @@ log.debug(f"{dfx}")
                              name="Averages",
                              value="averages")
                      ]
-                 )
+                 ),
+                 create_option(
+                     name="about",
+                     description="view README",
+                     option_type=3,
+                     required=False,
+                     choices=[
+                         create_choice(
+                             name="Teddy-HeroSearch",
+                             value="show"),
+                        create_choice(
+                             name="Commands",
+                             value="commands")
+                        ]
+                         )
              ])
-async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week", show="null"):
+async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week", show="null", about="null"):
     channelid = ctx.channel.id
     await ctx.send(f":bear: `Processing request...`")
     if channelid in optout:
@@ -1095,210 +1125,243 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
         log.info(f"Permission Denied for Channel: {channelname}({channelid})")
     else:
 
-        names = heroes.list
-        shero = hero.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()
-        print(f"Searching {shero} from {hero}")
-        log.debug(f"Searching {shero} from {hero}")
+        #SHOW HELP
+        if about!="null":
+            if about=="show":
+                about_title = "Teddy: Hero Search"
+                desc = "Teddy Hero Search displays performance data for your favorite hero. \
+                       \n\n How is this different from `/td`? \
+                       \n `/td` looks at the tier list generated each week and shows you the overall performance of all heroes \
+                       \n `/tdh` looks at a pre-compiled summary of all of the data and shows you a break-down for your hero. \
+                       \n - Additionally, `/tdh` looks at historical data to produce trends. \
+                       \n\n Give it a try!"
+            elif about=="commands":
+                about_title = "Commands"
+                desc = "Command Options List:\
+                       \n\n`/tdh hero: YOUR-HERO-NAME` (required) - Show KDA/WR%/USE% for this Hero by MODE, REGION, and ELO \
+                       \n- `region:(NA,SA,SE,EU)`, default:`All` \
+                       \n- `mode:(Brawl,Classic,Rank)`, default: `All-Modes` \
+                       \n- `elo:(Normal,High,Very-High)`, default: `All-Levels` \
+                       \n- `period:(Month,Week,All-Time)`, default: `Week` \
+                       \n- `show:(History, Averages)` default: `none` - The view changes from a historical view of KDA,WR,or USE -or- a box chart view of averages"
+            # Declare Embed
+            helpembed = discord.Embed(
+                    title=f" About: {about_title}",
+                    description=f"{desc}\n"
+                )
 
-        ### FIRST---- Search Array for Hero
-        #result = [v for v in names if shero in v.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()]
-        result = [v for v in names if v.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower().startswith(shero)]
+            helpembed.set_thumbnail(
+                    url="https://icons.iconarchive.com/icons/custom-icon-design/flatastic-2/256/help-desk-icon.png")
 
-        if len(result) == 0:
-            await ctx.send(content=f"Could not find `{hero}`!")
-        elif len(result) > 1:
-            await ctx.send(content=f"Found more than one match.. did you mean:`{result}`?")
+            helpembed.set_author(name="p3", url="https://github.com/p3hndrx",
+                                     icon_url="https://cdn.discordapp.com/avatars/336978363669282818/74ce51e0a6b2990a5c4153a8a7a36f37.png")
+            await ctx.channel.send(embed=helpembed)
         else:
-            hn = result[0]
 
-            # audit
-            user = ctx.author
-            # audit.info(f",{user},dd,{region},{mode},{elo},{period},{sort},{role},{view},{chartview},{about},{show},{shero}")
-            audit.info(f"{user},ddh,{region},{mode},{elo},{period},,,,,,{show},{hn}")
-            log.info(f"{user} used /ddh")
+            names = heroes.list
+            shero = hero.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()
+            print(f"Searching {shero} from {hero}")
+            log.debug(f"Searching {shero} from {hero}")
 
-            log.info(f"Looking for... {hn}")
-            hnl = hn.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()
+            ### FIRST---- Search Array for Hero
+            #result = [v for v in names if shero in v.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()]
+            result = [v for v in names if v.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower().startswith(shero)]
 
-            #### NEXT----  START TIERDATA
-            ico = mojimap.moji[hnl]
-            runtime = latest_run.replace(rawpath, "")
-            portrait = heroicons.portrait[hnl]
-
-            ###### Transform filters:
-            r = region.replace("All", "all")
-            m = mode.replace("All", "All-Modes")
-            lvl = elo.replace("All", "All-Levels")
-            dt = period.replace("AT", "All-Time").replace("Week", "This Week").replace("Month", "This Month")
-
-            #### COLOR DECORATION
-            if mode == "Rank":
-                color = discord.Color.red()
-            elif mode == "Brawl":
-                color = discord.Color.blue()
-            elif mode == "Classic":
-                color = discord.Color.gold()
+            if len(result) == 0:
+                await ctx.send(content=f"Could not find `{hero}`!")
+            elif len(result) > 1:
+                await ctx.send(content=f"Found more than one match.. did you mean:`{result}`?")
             else:
-                color = discord.Color.teal()
+                hn = result[0]
 
-            #### DECLARE EMBED ####
-            embed = discord.Embed(
-                title=f"TierData for {hn}",
-                description=f"(Region:{region}, Mode:{mode}, Elo:{elo})",
-                color=color)
+                # audit
+                user = ctx.author
+                # audit.info(f",{user},dd,{region},{mode},{elo},{period},{sort},{role},{view},{chartview},{about},{show},{shero}")
+                audit.info(f"{user},ddh,{region},{mode},{elo},{period},,,,,,{show},{hn}")
+                log.info(f"{user} used /ddh")
 
-            embed.set_thumbnail(url=f"{portrait}")
+                log.info(f"Looking for... {hn}")
+                hnl = hn.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()
 
-            #CHECK FOR HISTORY:
-            if show=="history":
-                #SHOW HISTORY CHART
-                chart = f"{histpath}{r}/{m}/{lvl}/{hnl}.png"
+                #### NEXT----  START TIERDATA
+                ico = mojimap.moji[hnl]
+                runtime = latest_run.replace(rawpath, "")
+                portrait = heroicons.portrait[hnl]
 
-                if not os.path.exists(chart):
-                    embed.add_field(name=f" {ico} Historical Summary:", value=f"`No Chart Available...`", inline=False)
-                    log.warning(f"Missing Chart: {chart}")
+                ###### Transform filters:
+                r = region.replace("All", "all")
+                m = mode.replace("All", "All-Modes")
+                lvl = elo.replace("All", "All-Levels")
+                dt = period.replace("AT", "All-Time").replace("Week", "This Week").replace("Month", "This Month")
+
+                #### COLOR DECORATION
+                if mode == "Rank":
+                    color = discord.Color.red()
+                elif mode == "Brawl":
+                    color = discord.Color.blue()
+                elif mode == "Classic":
+                    color = discord.Color.gold()
+                else:
+                    color = discord.Color.teal()
+
+                #### DECLARE EMBED ####
+                embed = discord.Embed(
+                    title=f"TierData for {hn}",
+                    description=f"(Region:{region}, Mode:{mode}, Elo:{elo})",
+                    color=color)
+
+                embed.set_thumbnail(url=f"{portrait}")
+
+                #CHECK FOR HISTORY:
+                if show=="history":
+                    #SHOW HISTORY CHART
+                    chart = f"{histpath}{r}/{m}/{lvl}/{hnl}.png"
+
+                    if not os.path.exists(chart):
+                        embed.add_field(name=f" {ico} Historical Summary:", value=f"`No Chart Available...`", inline=False)
+                        log.warning(f"Missing Chart: {chart}")
+
+                        #### ADD EMBED FOR Foot
+                        embed.add_field(name=f"Source:",
+                                        value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
+                                        inline=False)
+
+                        await ctx.channel.send(embed=embed)
+
+                    else:
+                        embed.add_field(name=f" {ico} Historical Summary:", value=f"Changes in Win%, Use%, KDA over Time.",
+                                    inline=False)
+                        log.info(f"Reading Chart: {chart}")
+                        file = discord.File(chart, filename=f"{hnl}.png")
+                        embed.set_image(url=f"attachment://{hnl}.png")
+
+                        #### ADD EMBED FOR Foot
+                        embed.add_field(name=f"Source:",
+                                        value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
+                                        inline=False)
+
+                        await ctx.channel.send(file=file, embed=embed)
+                # CHECK FOR HISTORY:
+                if show == "averages":
+                    # SHOW AVERAGES CHART
+                    chart = f"{avgpath}{r}/{m}/{lvl}/{hnl}.png"
+
+                    if not os.path.exists(chart):
+                        embed.add_field(name=f" {ico} Historical Summary:", value=f"`No Chart Available...`", inline=False)
+                        log.warning(f"Missing Chart: {chart}")
+
+                        #### ADD EMBED FOR Foot
+                        embed.add_field(name=f"Source:",
+                                                value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
+                                                inline=False)
+
+                        await ctx.channel.send(embed=embed)
+
+                    else:
+                        embed.add_field(name=f" {ico} Statistical Summary:",
+                                        value=f"Averages in Win%, Use%, KDA over Time.",
+                                        inline=False)
+                        log.info(f"Reading Chart: {chart}")
+                        file = discord.File(chart, filename=f"{hnl}.png")
+                        embed.set_image(url=f"attachment://{hnl}.png")
+
+                        #### ADD EMBED FOR Foot
+                        embed.add_field(name=f"How to Read:",
+                                        value=f"The boxplot shows the highest and lowest values for each. The line denotes the _median_ value and the ▲ denotes the _mean_. ○ denotes outliers, if detected.",
+                                        inline=False)
+                        embed.add_field(name=f"Source:",
+                                                value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
+                                                inline=False)
+                        await ctx.channel.send(file=file, embed=embed)
+
+                if show == "null":
+                    outlier = 0
+                    #SHOW ALL TABLES
+                    #### Create Filters
+                    nfilter = dfx.isin([hn]).any(axis=1)
+                    pfilter = dfx["period"].isin([period])
+                    rfilter = dfx["region"].isin([r])
+                    mfilter = dfx["mode"].isin([m])
+                    efilter = dfx["elo"].isin([lvl])
+
+                    sumdf = dfx[nfilter & rfilter & pfilter & mfilter & efilter]
+                    sumdf = sumdf.reindex(columns=['region', 'elo', 'mode', 'win', 'use', 'kda'])
+
+                    #Check for outlier
+                    if (sumdf['kda'] > kdalim).any() or (sumdf['win'] == winlim).any() or (sumdf['use'] == uselim).any():
+                        outlier += 1
+                        log.info(f"We have an outlier.")
+
+                    if sumdf.empty:
+                        sumdf = "No data available."
+                    else:
+                        # replace outlier with xxx
+                        sumdf['kda'] = sumdf['kda'].mask(sumdf['kda'] > kdalim, "---")
+                        sumdf = sumdf.to_string(index=False)
+                    embed.add_field(name=f" {ico} Summary for: {dt})", value=f"`{sumdf}`", inline=False)
+
+                    ## CREATE EMBED FIELDS:
+                    if r == "all":
+                        rdf = dfx[nfilter & pfilter & mfilter & efilter]
+                        rdf = rdf.reindex(columns=['region', 'elo', 'mode', 'win', 'use', 'kda'])
+                        rdf.sort_values('region', ascending=True)
+                        # Check for outlier
+                        if (rdf['kda'] > kdalim).any() or (rdf['win'] == winlim).any() or (rdf['use'] == uselim).any():
+                            outlier += 1
+                            log.info(f"We have an outlier.")
+                        if rdf.empty:
+                            rdf = "No data available."
+                        else:
+                            #outlier
+                            rdf['kda'] = rdf['kda'].mask(rdf['kda'] > kdalim, "---")
+                            rdf = rdf.to_string(index=False)
+                        embed.add_field(name=f"Sorted by Region:", value=f"`{rdf}`", inline=False)
+
+                    if m == "All-Modes":
+                        mdf = dfx[nfilter & pfilter & rfilter & efilter]
+                        mdf = mdf.reindex(columns=['mode', 'region', 'elo', 'win', 'use', 'kda'])
+                        mdf.sort_values('mode', ascending=True)
+                        # Check for outlier
+                        if (mdf['kda'] > kdalim).any() or (mdf['win'] == winlim).any() or (mdf['use'] == uselim).any():
+                            outlier += 1
+                            log.info(f"We have an outlier.")
+                        if mdf.empty:
+                            mdf = "No data available."
+                        else:
+                            #outlier
+                            mdf['kda'] = mdf['kda'].mask(mdf['kda'] > kdalim, "---")
+                            mdf = mdf.to_string(index=False)
+                        embed.add_field(name=f"Sorted by Modes:", value=f"`{mdf}`", inline=False)
+
+                    if lvl == "All-Levels":
+                        edf = dfx[nfilter & pfilter & rfilter & mfilter]
+                        edf = edf.reindex(columns=['elo', 'mode', 'region', 'win', 'use', 'kda'])
+                        edf.sort_values('elo', ascending=True)
+                        # Check for outlier
+                        if (edf['kda'] > kdalim).any() or (edf['win'] == winlim).any() or (edf['use'] == uselim).any():
+                            outlier += 1
+                            log.info(f"We have an outlier.")
+                        if edf.empty:
+                            edf = "No data available."
+                        else:
+                            #outlier
+                            edf['kda'] = edf['kda'].mask(edf['kda'] > kdalim, "---")
+                            edf = edf.to_string(index=False)
+                        embed.add_field(name=f"Sorted by Elo:", value=f"`{edf}`", inline=False)
+
+                    # IF OUTLIER
+                    if outlier >= 1:
+                        embed.add_field(name=f":rotating_light: Outlier Notice:",
+                                        value=f":bear: Teddy has detected a statistically improbable anomaly in the data you have requested."
+                                              f"\nTry using a filter such as `/tdh mode:Rank` to get more accurate results.",
+                                        inline=False)
 
                     #### ADD EMBED FOR Foot
                     embed.add_field(name=f"Source:",
-                                    value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
-                                    inline=False)
+                                        value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
+                                        inline=False)
 
                     await ctx.channel.send(embed=embed)
-
-                else:
-                    embed.add_field(name=f" {ico} Historical Summary:", value=f"Changes in Win%, Use%, KDA over Time.",
-                                inline=False)
-                    log.info(f"Reading Chart: {chart}")
-                    file = discord.File(chart, filename=f"{hnl}.png")
-                    embed.set_image(url=f"attachment://{hnl}.png")
-
-                    #### ADD EMBED FOR Foot
-                    embed.add_field(name=f"Source:",
-                                    value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
-                                    inline=False)
-
-                    await ctx.channel.send(file=file, embed=embed)
-            # CHECK FOR HISTORY:
-            if show == "averages":
-                # SHOW AVERAGES CHART
-                chart = f"{avgpath}{r}/{m}/{lvl}/{hnl}.png"
-
-                if not os.path.exists(chart):
-                    embed.add_field(name=f" {ico} Historical Summary:", value=f"`No Chart Available...`", inline=False)
-                    log.warning(f"Missing Chart: {chart}")
-
-                    #### ADD EMBED FOR Foot
-                    embed.add_field(name=f"Source:",
-                                            value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
-                                            inline=False)
-
-                    await ctx.channel.send(embed=embed)
-
-                else:
-                    embed.add_field(name=f" {ico} Statistical Summary:",
-                                    value=f"Averages in Win%, Use%, KDA over Time.",
-                                    inline=False)
-                    log.info(f"Reading Chart: {chart}")
-                    file = discord.File(chart, filename=f"{hnl}.png")
-                    embed.set_image(url=f"attachment://{hnl}.png")
-
-                    #### ADD EMBED FOR Foot
-                    embed.add_field(name=f"How to Read:",
-                                    value=f"The boxplot shows the highest and lowest values for each. The line denotes the _median_ value and the ▲ denotes the _mean_. ○ denotes outliers, if detected.",
-                                    inline=False)
-                    embed.add_field(name=f"Source:",
-                                            value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
-                                            inline=False)
-                    await ctx.channel.send(file=file, embed=embed)
-
-            if show == "null":
-                outlier = 0
-                #SHOW ALL TABLES
-                #### Create Filters
-                nfilter = dfx.isin([hn]).any(axis=1)
-                pfilter = dfx["period"].isin([period])
-                rfilter = dfx["region"].isin([r])
-                mfilter = dfx["mode"].isin([m])
-                efilter = dfx["elo"].isin([lvl])
-
-                sumdf = dfx[nfilter & rfilter & pfilter & mfilter & efilter]
-                sumdf = sumdf.reindex(columns=['region', 'elo', 'mode', 'win', 'use', 'kda'])
-
-                #Check for outlier
-                if (sumdf['kda'] > kdalim).any() or (sumdf['win'] == winlim).any() or (sumdf['use'] == uselim).any():
-                    outlier += 1
-                    log.info(f"We have an outlier.")
-
-                if sumdf.empty:
-                    sumdf = "No data available."
-                else:
-                    # replace outlier with xxx
-                    sumdf['kda'] = sumdf['kda'].mask(sumdf['kda'] > kdalim, "---")
-                    sumdf = sumdf.to_string(index=False)
-                embed.add_field(name=f" {ico} Summary for: {dt})", value=f"`{sumdf}`", inline=False)
-
-                ## CREATE EMBED FIELDS:
-                if r == "all":
-                    rdf = dfx[nfilter & pfilter & mfilter & efilter]
-                    rdf = rdf.reindex(columns=['region', 'elo', 'mode', 'win', 'use', 'kda'])
-                    rdf.sort_values('region', ascending=True)
-                    # Check for outlier
-                    if (rdf['kda'] > kdalim).any() or (rdf['win'] == winlim).any() or (rdf['use'] == uselim).any():
-                        outlier += 1
-                        log.info(f"We have an outlier.")
-                    if rdf.empty:
-                        rdf = "No data available."
-                    else:
-                        #outlier
-                        rdf['kda'] = rdf['kda'].mask(rdf['kda'] > kdalim, "---")
-                        rdf = rdf.to_string(index=False)
-                    embed.add_field(name=f"Sorted by Region:", value=f"`{rdf}`", inline=False)
-
-                if m == "All-Modes":
-                    mdf = dfx[nfilter & pfilter & rfilter & efilter]
-                    mdf = mdf.reindex(columns=['mode', 'region', 'elo', 'win', 'use', 'kda'])
-                    mdf.sort_values('mode', ascending=True)
-                    # Check for outlier
-                    if (mdf['kda'] > kdalim).any() or (mdf['win'] == winlim).any() or (mdf['use'] == uselim).any():
-                        outlier += 1
-                        log.info(f"We have an outlier.")
-                    if mdf.empty:
-                        mdf = "No data available."
-                    else:
-                        #outlier
-                        mdf['kda'] = mdf['kda'].mask(mdf['kda'] > kdalim, "---")
-                        mdf = mdf.to_string(index=False)
-                    embed.add_field(name=f"Sorted by Modes:", value=f"`{mdf}`", inline=False)
-
-                if lvl == "All-Levels":
-                    edf = dfx[nfilter & pfilter & rfilter & mfilter]
-                    edf = edf.reindex(columns=['elo', 'mode', 'region', 'win', 'use', 'kda'])
-                    edf.sort_values('elo', ascending=True)
-                    # Check for outlier
-                    if (edf['kda'] > kdalim).any() or (edf['win'] == winlim).any() or (edf['use'] == uselim).any():
-                        outlier += 1
-                        log.info(f"We have an outlier.")
-                    if edf.empty:
-                        edf = "No data available."
-                    else:
-                        #outlier
-                        edf['kda'] = edf['kda'].mask(edf['kda'] > kdalim, "---")
-                        edf = edf.to_string(index=False)
-                    embed.add_field(name=f"Sorted by Elo:", value=f"`{edf}`", inline=False)
-
-                # IF OUTLIER
-                if outlier >= 1:
-                    embed.add_field(name=f":rotating_light: Outlier Notice:",
-                                    value=f":bear: Teddy has detected a statistically improbable anomaly in the data you have requested."
-                                          f"\nTry using a filter such as `/tdh mode:Rank` to get more accurate results.",
-                                    inline=False)
-
-                #### ADD EMBED FOR Foot
-                embed.add_field(name=f"Source:",
-                                    value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
-                                    inline=False)
-
-                await ctx.channel.send(embed=embed)
 
 # endregion
 
