@@ -1165,8 +1165,14 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
 
             ### FIRST---- Search Array for Hero
             #result = [v for v in names if shero in v.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()]
-            result = [v for v in names if v.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower().startswith(shero)]
 
+            #Try Exact Match
+            result = [v for v in names if shero == v.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()]
+
+            if len(result) == 0:
+                result = [v for v in names if v.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower().startswith(shero)]
+
+            #Try Partial
             if len(result) == 0:
                 await ctx.send(content=f"Could not find `{hero}`!")
             elif len(result) > 1:
