@@ -61,7 +61,7 @@ mid=[
 'Alice',
 'Aurora',
 'Cecilion',
-'Chang-e',
+'Chang\'e',
 'Claude',
 'Cyclops',
 'Esmeralda',
