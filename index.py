@@ -315,8 +315,8 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
     else:
         #audit
         user = ctx.author
-        audit.info(f"{user},dd,{region},{mode},{elo},{period},{sort},{role},{view},{chartview},{about},,")
-        log.info(f"{user} used /dd")
+        audit.info(f"{user},td,{region},{mode},{elo},{period},{sort},{role},{view},{chartview},{about},,")
+        log.info(f"{user} used /td")
 
         if about!="null":
             if about=="show":
@@ -1183,8 +1183,8 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                 # audit
                 user = ctx.author
                 # audit.info(f",{user},dd,{region},{mode},{elo},{period},{sort},{role},{view},{chartview},{about},{show},{shero}")
-                audit.info(f"{user},ddh,{region},{mode},{elo},{period},,,,,,{show},{hn}")
-                log.info(f"{user} used /ddh")
+                audit.info(f"{user},tdh,{region},{mode},{elo},{period},,,,,,{show},{hn}")
+                log.info(f"{user} used /tdh")
 
                 log.info(f"Looking for... {hn}")
                 hnl = hn.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()
