@@ -71,7 +71,7 @@ else:
 # endregion
 
 # region VERSION ####
-version = "BETA Release Candidate Ver.02.106 (20211027)"
+version = "BETA Release Candidate Ver.02.110 (20211110)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -94,6 +94,7 @@ rawpath = "/var/www/html/TierData/json/"
 histpath = "/var/www/html/timeline/summary/"
 avgpath = "/var/www/html/timeline/averages/"
 chartpath = "/var/www/html/reports/"
+reportpath = "/var/www/html/summary-reports-png"
 
 prof = ["assassin","marksman","mage","tank","support","fighter"]
 lanes = ["gold","exp","mid","jungle","roam"]
@@ -1379,9 +1380,27 @@ async def on_ready():
     startupembed = discord.Embed(
        title=f"***Started Teddy-{version}",
        description=f"Everything is looking ok...\n")
-    file = discord.File("/var/www/html/hello.png", filename=f"hello.png")
-    startupembed.set_image(url=f"attachment://hello.png")
-    await bot.get_channel(853806791150665748).send(file=file, embed=startupembed)
+
+    startupembed.set_thumbnail(
+        url="https://icons.iconarchive.com/icons/custom-icon-design/flatastic-9/256/Accept-icon.png")
+
+    #Check for file
+    weeklyreport = f"{reportpath}/{today}.png"
+    if os.path.exists(weeklyreport):
+        startupembed.add_field(name=f" Weekly Stats Summary for: {today}:",
+                               value=f"Please checkout the weekly summary powered by TEDDY! \
+                                     Every week after the stats run, we summarize the findings and \
+                                     produce this nifty infographic to demonstrate how players are performing! \
+                                     Enjoy!", inline=False)
+        file = discord.File(f"{weeklyreport}", filename=f"{today}.png")
+        startupembed.set_image(url=f"attachment://{today}.png")
+        log.info(f"We have a weekly report!  Printing: {weeklyreport}")
+        await bot.get_channel(853806791150665748).send(file=file, embed=startupembed)
+    else:
+        await bot.get_channel(853806791150665748).send(embed=startupembed)
+        log.info(f"No weekly report found. Starting normally.")
+
+
 # endregion
 
 # region DISCORD STUFF
