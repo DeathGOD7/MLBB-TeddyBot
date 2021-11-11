@@ -71,7 +71,7 @@ else:
 # endregion
 
 # region VERSION ####
-version = "BETA Release Candidate Ver.02.110 (20211110)"
+version = "BETA Release Candidate Ver.02.111 (20211110)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -81,7 +81,7 @@ guild_ids = [850386581135163489,832548513383972884]
 print(f"Enabling for Server(s):{guild_ids}")
 log.info(f"Enabling for Server(s):{guild_ids}")
 
-optin = [853816389499748382,869691498952802355]
+optin = [853806791150665748,873259572985495552]
 optout = []
 # endregion
 
@@ -1395,10 +1395,13 @@ async def on_ready():
         file = discord.File(f"{weeklyreport}", filename=f"{today}.png")
         startupembed.set_image(url=f"attachment://{today}.png")
         log.info(f"We have a weekly report!  Printing: {weeklyreport}")
-        await bot.get_channel(853806791150665748).send(file=file, embed=startupembed)
+        for channel_id in optin:
+            await bot.get_channel(channel_id).send(file=file, embed=startupembed)
     else:
-        await bot.get_channel(853806791150665748).send(embed=startupembed)
         log.info(f"No weekly report found. Starting normally.")
+        startupembed.add_field(name=f"Messages:",value=f"No messages.", inline=False)
+        for channel_id in optin:
+            await bot.get_channel(channel_id).send(embed=startupembed)
 
 
 # endregion
