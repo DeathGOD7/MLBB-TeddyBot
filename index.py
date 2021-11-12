@@ -71,7 +71,7 @@ else:
 # endregion
 
 # region VERSION
-version = "BETA Release Candidate Ver.02.121 (20211111)"
+version = "BETA Release Candidate Ver.02.125 (20211111)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -1447,8 +1447,8 @@ async def weeklysummary_error(ctx, error):
                         `reportnumber` (e.g. `{reportnum}`)\n\n \
                         You can optionally run: `/td listsummary` to view all available reports\n\n \
                         e.g.: `/td weeklysummary {channel} {reportnum}`")
-
-        #await ctx.send(f"`the /td weeklysummary command requires the following arguments: \n \")
+        errorembed.set_thumbnail(
+            url="https://icons.iconarchive.com/icons/hopstarter/sleek-xp-basic/256/Close-icon.png")
         await ctx.send(embed=errorembed)
 
 @bot.command()
@@ -1493,18 +1493,15 @@ async def info(ctx):
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
-        #await ctx.send("Try `/td info` for a list of commands")
-        return
+        log.error(f"Command Not Found")
     if isinstance(error, commands.MissingRequiredArgument):
-        return
-        #await ctx.send("```Missing a required argument.```")
+        log.error(f"Function Missing Argument")
     if isinstance(error, commands.MissingPermissions):
-        await ctx.send("```You do not have the appropriate permissions to run this command.```")
+        log.error(f"Insufficient Permissions")
     if isinstance(error, commands.BotMissingPermissions):
-        await ctx.send("```I don't have sufficient permissions!```")
+        log.error(f"Insufficient Bot Permissions")
     else:
-        print("error not caught")
-        print(error)
+        log.error(f"Unspecified Error")
 # endregion
 
 bot.run(TOKEN)
