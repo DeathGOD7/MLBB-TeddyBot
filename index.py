@@ -70,19 +70,20 @@ else:
     log.info(f"Found log at: {auditpath}")
 # endregion
 
-# region VERSION ####
-version = "BETA Release Candidate Ver.02.111 (20211110)"
+# region VERSION
+version = "BETA Release Candidate Ver.02.121 (20211111)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
 
 # region PERMISSIONS
 guild_ids = [850386581135163489,832548513383972884]
-print(f"Enabling for Server(s):{guild_ids}")
 log.info(f"Enabling for Server(s):{guild_ids}")
 
 optin = [853806791150665748,873259572985495552]
 optout = []
+
+summaryroles = ['MLBB Official','DEV','Discord Bot Developer','Lead Moderator']
 # endregion
 
 # region VARIABLES
@@ -108,12 +109,12 @@ runtimes = sorted(runtimes, reverse=True)
 latest_run = max(d for d in runtimes)
 latest_run = os.path.join(rawpath, latest_run)
 print(latest_run)
-# endregion
 
 ##### DISCORD LISTENERS #######
 
-bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
+bot = commands.Bot(command_prefix="/td ", intents=discord.Intents.all())
 slash = SlashCommand(bot, sync_commands=True)
+# endregion
 
 # region MAIN TD FUNCTION
 @slash.slash(name="td",
@@ -1384,26 +1385,107 @@ async def on_ready():
     startupembed.set_thumbnail(
         url="https://icons.iconarchive.com/icons/custom-icon-design/flatastic-9/256/Accept-icon.png")
 
-    #Check for file
-    weeklyreport = f"{reportpath}/{today}.png"
+    for channel_id in optin:
+        await bot.get_channel(channel_id).send(embed=startupembed)
+
+# endregion
+
+# region MOD COMMANDS
+@bot.command(pass_context=True)
+@commands.has_any_role(*summaryroles)
+async def weeklysummary(ctx, channel: discord.TextChannel, reportnum):
+    # confirmation
+    await ctx.send(f"Sending Weekly Summary from {reportnum} to: {channel}")
+    log.info(f"Sending Weekly Summary from {reportnum} to: {channel}")
+
+    #build summary
+    summaryembed = discord.Embed(
+        title=f"WEEKLY SUMMARY REPORT - {reportnum}",
+        description=f"Powered by :bear: TEDDY\n")
+
+    summaryembed.set_thumbnail(
+        url="https://icons.iconarchive.com/icons/graphicloads/polygon/256/stats-icon.png")
+
+    channel = channel.id
+
+    #check for report
+    weeklyreport = f"{reportpath}/{reportnum}.png"
     if os.path.exists(weeklyreport):
-        startupembed.add_field(name=f" Weekly Stats Summary for: {today}:",
+        summaryembed.add_field(name=f"Statistics for Region/Mode/Elo",
                                value=f"Please checkout the weekly summary powered by TEDDY! \
-                                     Every week after the stats run, we summarize the findings and \
-                                     produce this nifty infographic to demonstrate how players are performing! \
-                                     Enjoy!", inline=False)
-        file = discord.File(f"{weeklyreport}", filename=f"{today}.png")
-        startupembed.set_image(url=f"attachment://{today}.png")
+                                         Every week after the stats run, we summarize the findings and \
+                                         produce this nifty infographic to demonstrate how players are performing! \
+                                         Enjoy!", inline=False)
+        file = discord.File(f"{weeklyreport}", filename=f"{reportnum}.png")
+        summaryembed.set_image(url=f"attachment://{reportnum}.png")
         log.info(f"We have a weekly report!  Printing: {weeklyreport}")
-        for channel_id in optin:
-            await bot.get_channel(channel_id).send(file=file, embed=startupembed)
+
+        await bot.get_channel(channel).send(file=file, embed=summaryembed)
     else:
-        log.info(f"No weekly report found. Starting normally.")
-        startupembed.add_field(name=f"Messages:",value=f"No messages.", inline=False)
-        for channel_id in optin:
-            await bot.get_channel(channel_id).send(embed=startupembed)
+        log.info(f"No weekly report found: {weeklyreport}. Starting normally.")
+        summaryembed.add_field(name=f"Messages:", value=f"No messages.", inline=False)
 
+        await bot.get_channel(channel).send(embed=summaryembed)
 
+    pass
+
+@weeklysummary.error
+async def weeklysummary_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        listsums = sorted(os.listdir(reportpath))
+        listsums = [l.replace('.png', '') for l in listsums]
+
+        reportnum = listsums[-1]
+        channel = ctx.channel.id
+
+        log.info(f"No arguments found. Generating Help Text")
+
+        errorembed = discord.Embed(
+            title=f"Missing arguments:",
+            description=f"`/td weeklysummary` requires the following arguments:\n \
+                        `channel` (e.g. this channel: `{channel}`)\n \
+                        `reportnumber` (e.g. `{reportnum}`)\n\n \
+                        You can optionally run: `/td listsummary` to view all available reports\n\n \
+                        e.g.: `/td weeklysummary {channel} {reportnum}`")
+
+        #await ctx.send(f"`the /td weeklysummary command requires the following arguments: \n \")
+        await ctx.send(embed=errorembed)
+
+@bot.command()
+@commands.has_any_role(*summaryroles)
+async def listsummary(ctx):
+    listsums = sorted(os.listdir(reportpath))
+    listsums = [l.replace('.png', '') for l in listsums]
+    reportnum = listsums[-1]
+
+    listsumembed = discord.Embed(
+        title=f"Recent Weekly Summaries:",
+        description=f"\n")
+    listsumembed.set_thumbnail(
+        url="https://icons.iconarchive.com/icons/graphicloads/polygon/256/stats-icon.png")
+    listsumembed.add_field(name=f"List of recent Weekly Summaries:", value=f" \
+    `{listsums}`\n\n\
+    You may use these with `/td weeklysummary <channel> <report_date>` \
+    Run `/td weeklysummary` with no arguments to see usage.", inline=False)
+    log.info(f"Generating List of Summaries")
+    await ctx.send(embed=listsumembed)
+    pass
+
+@bot.command()
+@commands.has_any_role(*summaryroles)
+async def info(ctx):
+    modhelpembed = discord.Embed(
+        title=f"Moderator Commands:",
+        description=f"\n")
+    modhelpembed.add_field(name=f"`/td weeklysummary <channel> <report_date>`", value=f" \
+    Arguments required: channel, reportnumber.\n\nThis produces the weekly infographic and sends to specified channel\n \
+    Requires Role(s): `{summaryroles}`. \nThis also only works on channels where TEDDY can post.", inline=False)
+    modhelpembed.add_field(name=f"`/td listsummary `", value=f" \
+        This produces a list of the available summary reports to be used with `/td weeklysummary`\n \
+        Requires Role(s): `{summaryroles}`. \nThis also only works on channels where TEDDY can post.", inline=False)
+
+    await ctx.send(embed=modhelpembed)
+    pass
 # endregion
 
 # region DISCORD STUFF
@@ -1411,9 +1493,11 @@ async def on_ready():
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
+        #await ctx.send("Try `/td info` for a list of commands")
         return
     if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send("```Missing a required argument.  Do td> help *command*```")
+        return
+        #await ctx.send("```Missing a required argument.```")
     if isinstance(error, commands.MissingPermissions):
         await ctx.send("```You do not have the appropriate permissions to run this command.```")
     if isinstance(error, commands.BotMissingPermissions):
@@ -1424,4 +1508,4 @@ async def on_command_error(ctx, error):
 # endregion
 
 bot.run(TOKEN)
-#
+
