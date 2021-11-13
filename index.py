@@ -71,7 +71,7 @@ else:
 # endregion
 
 # region VERSION
-version = "BETA Release Candidate Ver.02.125 (20211111)"
+version = "BETA Release Candidate Ver.02.200 (20211113)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -97,6 +97,8 @@ avgpath = "/var/www/html/timeline/averages/"
 chartpath = "/var/www/html/reports/"
 reportpath = "/var/www/html/summary-reports-png"
 
+sort_by = ["wrank", "kdarank", "urank"]
+dsort_by = ["wrank_d", "kdarank_d", "urank_d"]
 prof = ["assassin","marksman","mage","tank","support","fighter"]
 lanes = ["gold","exp","mid","jungle","roam"]
 
@@ -109,6 +111,9 @@ runtimes = sorted(runtimes, reverse=True)
 latest_run = max(d for d in runtimes)
 latest_run = os.path.join(rawpath, latest_run)
 print(latest_run)
+
+previous_run = min(runtimes[0],runtimes[1])
+previous_run = os.path.join(rawpath, previous_run)
 
 ##### DISCORD LISTENERS #######
 
@@ -255,7 +260,10 @@ slash = SlashCommand(bot, sync_commands=True)
                              value="kda"),
                          create_choice(
                              name="Use",
-                             value="use")
+                             value="use"),
+                         create_choice(
+                             name="Delta",
+                             value="delta")
                      ]
                  ),
                  create_option(
@@ -392,7 +400,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                     log.info("Requesting: " + jsonfile)
 
                     runtime = latest_run.replace(rawpath, "")
-                    sort_by = ["wrank", "kdarank", "urank"]
 
                     #### COLOR DECORATION and THUMBNAIL####
                     if mode == "Rank":
@@ -566,7 +573,247 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                             rows = [v for k, v in data["data"].items()]
 
                             ######## SHOW VIEW OPTIONS#
-                            if view=="meta":
+                            if view == "delta":
+                                log.info(f"Request Delta View")
+                                embed.add_field(name=f"Delta View", value=f"These tables represent the most dramatic changes for each of the criteria from the last time the stats were synchronized.\
+                                                                          Sorted by the change in table rank, including the change in value.\n\n", inline=False)
+
+                                # Check for Previous Files
+                                pjsonfile = f'{previous_run}/en/{r}/{period}.{lvl}.{m}.json'
+                                if os.path.isdir(previous_run) and os.path.exists(pjsonfile):
+                                    log.info("Requesting: " + pjsonfile)
+                                    pruntime = previous_run.replace(rawpath, "")
+
+                                    # Load previous file
+                                    with open(pjsonfile) as pj:
+                                        pdata = json.load(pj)
+                                        prows = [w for l, w in pdata["data"].items()]
+                                        pdf = pd.DataFrame(prows, columns=['wrank', 'urank', 'kdarank', 'name', 'win', 'use','kda'])
+                                        #print(f"Previous Table:\n {pdf}")
+
+                                        df = pd.DataFrame(rows, columns=['kdarank','wrank','urank','name', 'win', 'use', 'kda'])
+                                        # MERGE CURRENT WITH PREVIOUS
+                                        df = df.merge(pdf, how='left', on='name')
+
+                                        # region DataFrame Calculations
+                                        # convert to string
+                                        df['win_x'] = list(map(lambda x: x[:-1], df['win_x'].values))
+                                        df['use_x'] = list(map(lambda x: x[:-1], df['use_x'].values))
+                                        df['win_y'] = list(map(lambda x: x[:-1], df['win_y'].values))
+                                        df['use_y'] = list(map(lambda x: x[:-1], df['use_y'].values))
+                                        df['win_x'] = [float(x) for x in df['win_x'].values]
+                                        df['use_x'] = [float(x) for x in df['use_x'].values]
+                                        df['win_y'] = [float(x) for x in df['win_y'].values]
+                                        df['use_y'] = [float(x) for x in df['use_y'].values]
+
+                                        # CALCULATE DELTAS
+                                        df['urank_d'] = df['urank_x'] - df['urank_y']
+                                        df['wrank_d'] = df['wrank_x'] - df['wrank_y']
+                                        df['kdarank_d'] = df['kdarank_x'] - df['kdarank_y']
+
+                                        df['win_d'] = df['win_x'] - df['win_y']
+                                        df['use_d'] = df['use_x'] - df['use_y']
+                                        df['kda_d'] = df['kda_x'] - df['kda_y']
+
+                                        df['win_d'] = df['win_d'].round(2)
+                                        df['use_d'] = df['use_d'].round(2)
+                                        df['kda_d'] = df['kda_d'].round(2)
+                                        # endregion
+                                        #print(f"Merged Table:\n {df}")
+
+                                        #region ColumnHeader Mappings
+
+                                        r = "RANK"
+                                        r = r.center(9, " ")
+                                        rd = "R▲"
+                                        rd = rd.center(6, " ")
+                                        i = "-"
+                                        i = i.center(2, " ")
+                                        n = "NAME"
+                                        n = n.center(13, " ")
+                                        w = "WIN"
+                                        w = w.center(6, " ")
+                                        u = "USE"
+                                        u = u.center(6, " ")
+                                        k = "KDA"
+                                        k = k.center(6, " ")
+
+                                        wd = "WIN▲"
+                                        wd = wd.center(6, " ")
+                                        ud = "USE▲"
+                                        ud = ud.center(6, " ")
+                                        kd = "KDA▲"
+                                        kd = kd.center(6, " ")
+
+                                        # print (df.columns)
+                                        #endregion
+
+                                        for crit in dsort_by:
+                                            report = "\n"
+
+                                            # check for outlier
+                                            if (df['kda_x'] > kdalim).any() or (df['win_x'] == winlim).any() or (
+                                                    df['use_x'] == uselim).any():
+                                                outlier += 1
+
+                                                log.info(f"We have an outlier (current).")
+
+                                            # filter by role
+                                            if role != "null":
+                                                rslt = getattr(roles, role)
+                                                # print(rslt)
+                                                df = df[df['name'].isin(rslt)]
+
+                                                if role == 'support':
+                                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/f/ff/Support_Icon.png'
+                                                elif role == 'mage':
+                                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/5/53/Mage_Icon.png'
+                                                elif role == 'marksman':
+                                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/1/10/Marksman_Icon.png'
+                                                elif role == 'assassin':
+                                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/3/3f/Assassin_Icon.png'
+                                                elif role == 'tank':
+                                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/f/f0/Tank_Icon.png'
+                                                elif role == 'fighter':
+                                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/1/1a/Fighter_Icon.png'
+
+                                                embed.set_author(name=f"Filter by {role.upper()}", icon_url=imgurl)
+
+                                                # sort
+                                            if sort == "Top":
+                                                dfs = df.sort_values(str(crit), ascending=False).head(5)
+                                                #print(f"sorted by: {crit}:\n{df}")
+                                            else:
+                                                dfs = df.sort_values(str(crit), ascending=False).tail(5)
+
+                                            #### Add Icon Column
+                                            dfs['o'] = dfs['name'].str.lower()
+                                            dfs['o'] = dfs['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
+                                            dfs['-'] = dfs['o'].map(mojimap.moji)
+                                            del dfs['o']
+                                            #print(f"Current Table:\n {dfs}")
+
+                                            #### Add Padding and FORMAT:
+
+
+                                            #Rebuild Tables
+                                            if crit == "wrank_d":
+                                                title = "WR+/-"
+                                                dfd = dfs.reindex(columns=[str(crit), '-', 'name','wrank_x','wrank_y','win_x', 'win_d'])
+                                                #print(f"Pre-Table for {crit}:\n {dfd}")
+
+                                                #concat & format field
+                                                dfd['wrank_d'] = dfd['wrank_d'].mask(dfd['wrank_d'] >= 0, ("+"+dfd['wrank_d'].astype(str)))
+                                                dfd['wrank'] = dfd['wrank_x'].astype(str)+" > "+ dfd['wrank_y'].astype(str)
+                                                dfd['win_d'] = dfd['win_d'].mask(dfd['win_d'] >= 0,("+" + dfd['win_d'].astype(str)))
+
+                                                #drop & reorder
+                                                cols = ['wrank_d', 'wrank', '-', 'name', 'win_x', 'win_d']
+                                                dfd = dfd[cols]
+
+                                                #add padding:
+                                                dfd['wrank'] = ('`' + dfd['wrank'].str.center(9) + '`')
+                                                dfd['wrank_d'] = dfd['wrank_d'].astype(str)
+                                                dfd['wrank_d'] = ('`' + dfd['wrank_d'].str.center(6) + '`')
+                                                dfd['name'] = ('`' + dfd['name'].str.center(13) + '`')
+                                                dfd['win_x'] = dfd['win_x'].astype(str)
+                                                dfd['win_x'] = ('`' + dfd['win_x'].str.center(6) + '`')
+                                                dfd['win_d'] = dfd['win_d'].astype(str)
+                                                dfd['win_d'] = ('`' + dfd['win_d'].str.center(6) + '`')
+
+                                                #format header:
+                                                dfd.rename(columns={'wrank_d': rd, 'wrank': r, '-': i, 'name': n, 'win_x': w, 'win_d':wd}, inplace=True)
+                                                dfd.columns = dfd.columns.astype(str)
+                                                dfd.columns = ('`' + dfd.columns + '`')
+
+                                            elif crit == "kdarank_d":
+                                                title = "KDA+/-"
+                                                dfd = dfs.reindex(columns=[str(crit), '-', 'name','kdarank_x','kdarank_y','kda_x', 'kda_d'])
+                                                #print(f"Pre-Table for {crit}:\n {dfd}")
+
+                                                # concat & format field
+                                                dfd['kdarank_d'] = dfd['kdarank_d'].mask(dfd['kdarank_d'] >= 0, ("+" + dfd['kdarank_d'].astype(str)))
+                                                dfd['kdarank'] = dfd['kdarank_x'].astype(str) + " > " + dfd['kdarank_y'].astype(str)
+                                                dfd['kda_d'] = dfd['kda_d'].mask(dfd['kda_d'] >= 0,("+" + dfd['kda_d'].astype(str)))
+
+                                                #drop and replace outliers
+                                                dfd['kda_x'] = dfd['kda_x'].mask(dfd['kda_x'].replace('\+|\-','', regex=True).astype(float) > kdalim, "---")
+                                                dfd['kda_d'] = dfd['kda_d'].mask(dfd['kda_d'].replace('\+|\-','', regex=True).astype(float) > kdalim, "---")
+                                                cols = ['kdarank_d', 'kdarank', '-', 'name', 'kda_x', 'kda_d']
+                                                dfd = dfd[cols]
+
+                                                # add padding:
+                                                dfd['kdarank'] = ('`' + dfd['kdarank'].str.center(9) + '`')
+                                                dfd['kdarank_d'] = dfd['kdarank_d'].astype(str)
+                                                dfd['kdarank_d'] = ('`' + dfd['kdarank_d'].str.center(6) + '`')
+                                                dfd['name'] = ('`' + dfd['name'].str.center(13) + '`')
+                                                dfd['kda_x'] = dfd['kda_x'].astype(str)
+                                                dfd['kda_x'] = ('`' + dfd['kda_x'].str.center(6) + '`')
+                                                dfd['kda_d'] = dfd['kda_d'].astype(str)
+                                                dfd['kda_d'] = ('`' + dfd['kda_d'].str.center(6) + '`')
+
+                                                # format header:
+                                                dfd.rename(columns={'kdarank_d': rd, 'kdarank': r, '-': i, 'name': n, 'kda_x': k,'kda_d': kd}, inplace=True)
+                                                dfd.columns = dfd.columns.astype(str)
+                                                dfd.columns = ('`' + dfd.columns + '`')
+
+                                            elif crit == "urank_d":
+                                                title = "Use+/-"
+                                                dfd = dfs.reindex(columns=[str(crit), '-', 'name','urank_x','urank_y','use_x', 'use_d'])
+                                                #print(f"Pre-Table for {crit}:\n {dfd}")
+
+                                                # concat & format field
+                                                dfd['urank_d'] = dfd['urank_d'].mask(dfd['urank_d'] >= 0,("+" + dfd['urank_d'].astype(str)))
+                                                dfd['urank'] = dfd['urank_x'].astype(str) + " > " + dfd['urank_y'].astype(str)
+                                                dfd['use_d'] = dfd['use_d'].mask(dfd['use_d'] >= 0,("+" + dfd['use_d'].astype(str)))
+
+                                                # drop & reorder
+                                                cols = ['urank_d', 'urank', '-', 'name', 'use_x', 'use_d']
+                                                dfd = dfd[cols]
+
+                                                # add padding:
+                                                dfd['urank'] = ('`' + dfd['urank'].str.center(9) + '`')
+                                                dfd['urank_d'] = dfd['urank_d'].astype(str)
+                                                dfd['urank_d'] = ('`' + dfd['urank_d'].str.center(6) + '`')
+                                                dfd['name'] = ('`' + dfd['name'].str.center(13) + '`')
+                                                dfd['use_x'] = dfd['use_x'].astype(str)
+                                                dfd['use_x'] = ('`' + dfd['use_x'].str.center(6) + '`')
+                                                dfd['use_d'] = dfd['use_d'].astype(str)
+                                                dfd['use_d'] = ('`' + dfd['use_d'].str.center(6) + '`')
+
+                                                # format header:
+                                                dfd.rename(columns={'urank_d': rd, 'urank': r, '-': i, 'name': n,'use_x': u, 'use_d': ud}, inplace=True)
+                                                dfd.columns = dfd.columns.astype(str)
+                                                dfd.columns = ('`' + dfd.columns + '`')
+
+                                            print(f"Rebuilt Table for {crit}:\n {dfd}")
+
+                                            # OUTPUT TO TABLE
+                                            table = dfd.to_string(index=False)
+
+                                            # print(table)
+                                            report += table
+
+
+
+                                            #### ADD EMBED FOR TABLE
+                                            embed.add_field(name=f"Sorted by {title}", value=f"{report}", inline=False)
+
+                                else:
+                                    log.warning(f"Bad Request: Missing: {pjsonfile} \
+                                                                Make sure {previous_run} exists.")
+                                    embed = discord.Embed(
+                                        title=f"{mode} TierData for {dt} > {previous_run} (Delta Values)",
+                                        description=f"{sort} Differences (Region:{region}, Mode:{mode}, Elo:{elo})\n",
+                                        color=0xFF5733)
+                                    embed.set_thumbnail(
+                                        url="https://icons.iconarchive.com/icons/paomedia/small-n-flat/256/sign-error-icon.png")
+                                    embed.add_field(name=f"No TierData Found",
+                                                    value=f"Source file missing. Please try again after the next data sync or refine your search.",
+                                                    inline=False)
+                                    await ctx.channel.send(embed=embed)
+
+                            elif view == "meta":
                                 log.info(f"Request Meta View")
                                 embed.add_field(name=f"Meta View: ", value=f"Heroes by Lane, Use%", inline=False)
                                 for ln in lanes:
