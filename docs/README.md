@@ -6,7 +6,7 @@ Link: [Meet Teddy](https://spark.adobe.com/page/BcSAFWkIpK2id/) (Adobe Spark)
 # Presentation: TEDDY 2.0 Features & Updates
 Link: [Teddy 2.0](https://spark.adobe.com/page/SPBxNf1anb9Y7/) (Adobe Spark)
 
-<a class="asp-embed-link" href="https://spark.adobe.com/page/SPBxNf1anb9Y7/" target="_blank"><img src="https://spark.adobe.com/page/SPBxNf1anb9Y7/embed.jpg?buster=1628267959506" alt="TEDDY v2.0" style="width:100%" border="0" /></a>
+<a class="asp-embed-link" href="https://spark.adobe.com/page/SPBxNf1anb9Y7/" target="_blank"><img src="https://spark.adobe.com/page/SPBxNf1anb9Y7/embed.jpg?buster=1628267959506" alt="TEDDY v2.0" style="width:80%" border="0" /></a>
 
 # The Functions:
 
@@ -33,12 +33,22 @@ Link: [Teddy 2.0](https://spark.adobe.com/page/SPBxNf1anb9Y7/) (Adobe Spark)
   - Out:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/Filter-Mage.png?raw=true">
 - View Meta/Role
   - Choices: `Normal (default), Meta, Role` 
-  - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/BasicView.png?raw=true">
-  - Out:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/View-Meta.png?raw=true">
-- View WinRate/KDA/Use
+    - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/BasicView.png?raw=true">
+    - Out:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/View-Meta.png?raw=true">
   - Choices: `WinRate, KDA, Use` 
-  - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/2ndView.png?raw=true">
-  - Out:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/View-Win.png?raw=true">
+    - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/2ndView.png?raw=true">
+    - Out:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/View-Win.png?raw=true">
+  - Choice: `Delta`
+    - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/Delta-Command.png?raw=true">
+    - Out:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/Delta-Output.png?raw=true">
+- ChartView:
+  - Choices: `Mode x WIN, Mode x USE, Mode x KDA, Mode x WIN (box), Mode x USE (box), Mode x KDA(box) ` 
+  - Type1:
+    - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/ChartView-Command-basic.png?raw=true">
+    - Out:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/ChartView-Basex-Output.png?raw=true">
+  - Type2:
+    - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/ChartView-Command.png?raw=true">
+    - Out:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/ChartView-BasexBox.png?raw=true">
 - About
   - Choices: `Teddy, The Data, Outliers, None (default)` 
   - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/BasicAbout.png?raw=true">
@@ -65,6 +75,13 @@ Repository: [MLBB-TeddyBot-DEV](https://github.com/p3hndrx/MLBB-TeddyBot-DEV)
 - Optional: Hero: Averages View
   - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/Hero-Averages-Command.png?raw=true">
   - Out:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/Hero-Averages.png?raw=true">
+
+# Moderator Functions
+- Display Weekly Summary `/td weeklysummary <channel> <reportnum>`
+  - Example:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/WeeklySummary-Help.png?raw=true">
+  - Example:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/WeeklySummary-Output.png?raw=true">
+- Display List of Weekly Summaries `/td listsummary`
+  - Example:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/ListSummary.png?raw=true"> 
 
 ## Updated Data Flow (v2.0+)
 <img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/TEDDY%20FLOW-TEDDY-DEV.png?raw=true">
