@@ -31,7 +31,7 @@ Link: [Teddy 2.0](https://spark.adobe.com/page/SPBxNf1anb9Y7/) (Adobe Spark)
   - Choices: `Assassin, Marksman, Tank, Mage, Support, Fighter, None (default)`
   - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/BasicRole.png?raw=true">
   - Out:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/Filter-Mage.png?raw=true">
-- View Meta/Role
+- View
   - Choices: `Normal (default), Meta, Role` 
     - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/BasicView.png?raw=true">
     - Out:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/View-Meta.png?raw=true">
