@@ -57,7 +57,7 @@ Link: [Teddy 2.0](https://spark.adobe.com/page/SPBxNf1anb9Y7/) (Adobe Spark)
 <img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/TEDDY%20FLOW-TEDDY-BetaRC.png">
 
 # Hero Functions
-Repository: [MLBB-TeddyBot-DEV](https://github.com/p3hndrx/MLBB-TeddyBot-DEV)
+> Note: PRODUCTION Bot, use: /tdh
 - Search by Hero<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/Hero-Basic-Command.png?raw=true">
   - hero: `Your Hero Input` (can match partial strings) 
   - Choices: 
