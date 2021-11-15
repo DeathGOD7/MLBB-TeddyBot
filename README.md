@@ -15,4 +15,4 @@ Production BETA Version of TeddyBot for NA MLBB Discord Server
 - Please check-out the Documentation for this Bot in the [/docs](https://github.com/p3hndrx/MLBB-TeddyBot/tree/main/docs) section
 
 # Tier Data Visualization
-<img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/sankeymatic_3000x1200.png?raw=true">
+<img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main.rd/docs/img/sankeymatic_2000x1200.png?raw=true">
