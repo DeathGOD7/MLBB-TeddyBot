@@ -53,8 +53,6 @@ Link: [Teddy 2.0](https://spark.adobe.com/page/SPBxNf1anb9Y7/) (Adobe Spark)
   - Choices: `Teddy, The Data, Outliers, None (default)` 
   - In:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/BasicAbout.png?raw=true">
   - Out:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/About-Basic.png?raw=true">
-## Data Flow
-<img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/TEDDY%20FLOW-TEDDY-BetaRC.png">
 
 # Hero Functions
 > Note: PRODUCTION Bot, use: /tdh
@@ -83,5 +81,5 @@ Link: [Teddy 2.0](https://spark.adobe.com/page/SPBxNf1anb9Y7/) (Adobe Spark)
 - Display List of Weekly Summaries `/td listsummary`
   - Example:<br><img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/ListSummary.png?raw=true"> 
 
-## Updated Data Flow (v2.0+)
-<img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/TEDDY%20FLOW-TEDDY-DEV.png?raw=true">
+## Updated Data Flow (v2.2+)
+<img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/TEDDY-2.0-TEDDY-BetaRC.drawio.png">
