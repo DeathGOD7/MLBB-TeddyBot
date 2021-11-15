@@ -1,6 +1,7 @@
-# MLBB-TeddyBot
+# MLBB-TeddyBot (REWORK)
 
 Production BETA Version of TeddyBot for NA MLBB Discord Server
+the .rd branch is intended to work with api.mobilelegends.com
 
 # Dependencies
 - Data Sourced by: https://github.com/p3hndrx/MLBB-MyMLBB-Stats
