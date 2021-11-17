@@ -14,7 +14,7 @@ The .rd branch is intended to work with api.mobilelegends.com
   - [matplotlib](https://matplotlib.org/)
 
 # Documentation
-- Please check-out the Documentation for this Bot in the [/docs](https://github.com/p3hndrx/MLBB-TeddyBot/tree/main/docs) section
+- Please check-out the Documentation for this Bot in the [/docs](https://github.com/p3hndrx/MLBB-TeddyBot/blob/main.rd/docs/) section
 
 # Tier Data Visualization
 <img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main.rd/docs/img/sankeymatic_2000x1200.png?raw=true">
