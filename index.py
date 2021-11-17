@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 import json
 import pandas as pd
+from pandas import json_normalize
 
 import discord
 from discord.ext import commands
@@ -71,7 +72,7 @@ else:
 # endregion
 
 # region VERSION
-version = "BETA Release Candidate Ver.02.200 (20211113)"
+version = "BETA Release Candidate Ver.03.01 (20211117)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -90,21 +91,19 @@ summaryroles = ['MLBB Official','DEV','Discord Bot Developer','Lead Moderator']
 x = datetime.datetime.now()
 today = x.strftime("%Y%m%d")
 
-#rawpath = "/tmp/TierData/"
-rawpath = "/var/www/html/TierData/json/"
+rawpath = "/tmp/RankData/"
+#rawpath = "/var/www/html/RankData/json/"
 histpath = "/var/www/html/timeline/summary/"
 avgpath = "/var/www/html/timeline/averages/"
 chartpath = "/var/www/html/reports/"
 reportpath = "/var/www/html/summary-reports-png"
 
-sort_by = ["wrank", "kdarank", "urank"]
-dsort_by = ["wrank_d", "kdarank_d", "urank_d"]
+sort_by = ["wrank", "banrank", "urank"]
+#sort_by = ["win", "ban", "use"]
+dsort_by = ["wrank_d", "banrank_d", "urank_d"]
 prof = ["assassin","marksman","mage","tank","support","fighter"]
 lanes = ["gold","exp","mid","jungle","roam"]
 
-kdalim = 20
-uselim = 0
-winlim = 100
 
 runtimes = os.listdir(rawpath)
 runtimes = sorted(runtimes, reverse=True)
@@ -127,76 +126,45 @@ slash = SlashCommand(bot, sync_commands=True)
              guild_ids=guild_ids,
              options=[
                  create_option(
-                     name="region",
-                     description="Look at TierData by REGION.",
-                     option_type=3,
-                     required=False,
-                     choices=[
-                         create_choice(
-                             name="EU",
-                             value="EU"),
-                         create_choice(
-                             name="NA",
-                             value="NA"),
-                         create_choice(
-                             name="SA",
-                             value="SA"),
-                         create_choice(
-                             name="SE",
-                             value="SE")
-                     ]
-                 ),
-                 create_option(
-                     name="mode",
-                     description="Look at TierData by GAME MODE.",
-                     option_type=3,
-                     required=False,
-                     choices=[
-                         create_choice(
-                             name="Brawl",
-                             value="Brawl"),
-                         create_choice(
-                             name="Classic",
-                             value="Classic"),
-                         create_choice(
-                             name="Rank",
-                             value="Rank")
-                     ]
-                 ),
-                 create_option(
                      name="elo",
                      description="Look at TierData by Player Performance!",
                      option_type=3,
                      required=False,
                      choices=[
                          create_choice(
-                             name="Normal",
-                             value="Normal"),
+                             name="All",
+                             value="All"),
                          create_choice(
-                             name="High",
-                             value="High"),
+                             name="Legend+",
+                             value="Legend"),
                          create_choice(
-                             name="Very-High",
-                             value="Very-High")
+                             name="Mythic (400+)",
+                             value="Mythic")
                      ]
                  ),
-                 create_option(
-                     name="period",
-                     description="Look at TierData for the previous time-period.",
-                     option_type=3,
-                     required=False,
-                     choices=[
-                         create_choice(
-                             name="Month",
-                             value="Month"),
-                         create_choice(
-                             name="Week",
-                             value="Week"),
-                         create_choice(
-                             name="All-Time",
-                             value="AT")
-                     ]
-                 ),
+                 #create_option(
+                 #    name="period",
+                 #    description="Look at TierData for the previous time-period.",
+                 #    option_type=3,
+                 #    required=False,
+                 #    choices=[
+                 #        create_choice(
+                 #            name="Day",
+                 #            value="Day"),
+                 #        create_choice(
+                 #            name="Week",
+                 #            value="Week"),
+                 #        create_choice(
+                 #            name="Month",
+                 #            value="Month"),
+                 #        create_choice(
+                 #            name="All-Time",
+                 #            value="All-Time"),
+                 #        create_choice(
+                 #            name="Season",
+                 #            value="Season"),
+                 #    ]
+                 #),
                  create_option(
                      name="sort",
                      description="Look at Top Values or Bottom Values.",
@@ -256,8 +224,8 @@ slash = SlashCommand(bot, sync_commands=True)
                              name="WinRate",
                              value="win"),
                          create_choice(
-                             name="KDA",
-                             value="kda"),
+                             name="Ban",
+                             value="ban"),
                          create_choice(
                              name="Use",
                              value="use"),
@@ -273,23 +241,23 @@ slash = SlashCommand(bot, sync_commands=True)
                      required=False,
                      choices=[
                          create_choice(
-                             name="Mode x WIN",
-                             value="modexwin"),
+                            name="Elo x WIN",
+                             value="eloxwin"),
                          create_choice(
-                             name="Mode x KDA",
-                             value="modexkda"),
+                             name="Elo x BAN",
+                             value="eloxban"),
                          create_choice(
-                             name="Mode x USE",
-                             value="modexuse"),
-                        create_choice(
-                             name="Mode x WIN (box)",
-                             value="modexwinbox"),
+                             name="Elo x USE",
+                             value="eloxuse"),
                          create_choice(
-                             name="Mode x KDA (box)",
-                             value="modexkdabox"),
+                             name="Elo x WIN (box)",
+                             value="eloxwinbox"),
                          create_choice(
-                             name="Mode x USE (box)",
-                             value="modexusebox")
+                             name="Elo x BAN (box)",
+                             value="eloxbanbox"),
+                         create_choice(
+                             name="Elo x USE (box)",
+                             value="eloxusebox")
                      ]
                  ),
                  create_option(
@@ -301,21 +269,18 @@ slash = SlashCommand(bot, sync_commands=True)
                          create_choice(
                              name="Teddy",
                              value="show"),
-                        create_choice(
+                         create_choice(
                              name="Commands",
                              value="commands"),
                          create_choice(
                              name="The Data",
-                             value="data"),
-                         create_choice(
-                             name="Outliers",
-                             value="outlier")
+                             value="data")
                         ]
                          )
                      ]
                  )
 
-async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort="Top", role="null", view="normal",chartview="null", about="null"):
+async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="normal",chartview="null", about="null"):
     channelid = ctx.channel.id
     await ctx.send(f":bear: `Processing request...`")
     if channelid in optout:
@@ -325,8 +290,8 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
     else:
         #audit
         user = ctx.author
-        audit.info(f"{user},td,{region},{mode},{elo},{period},{sort},{role},{view},{chartview},{about},,")
-        log.info(f"{user} used /td")
+        audit.info(f"{user},td,{elo},{period},{sort},{role},{view},{chartview},{about},,")
+        log.info(f"{user} used /dd")
 
         if about!="null":
             if about=="show":
@@ -334,49 +299,36 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                 desc = "Teddy (aka 'TD') is a MLBB TierData Bot made exclusively for the MLBB NA Discord Server.\n\n"
             elif about=="data":
                 about_title = "The Data"
-                desc = "TierData is provided by https://m.mobilelegends.com/en/rank through an API. Teddy fully synchronizes the data every week which is initially summarized by **period**: \nWeek, Month, and All-Time. \
-                              \n\nThe data is further sorted by the following attributes: \n**elo** (Normal, High, Very-High), \n**mode** (Classic, Rank, Brawl), \n**region** (EU,NA,SA,and SE.) \
-                              \n\nAll together, this makes-up 384 datasets with over 24000 datapoints! \
+                desc = "TierData is provided by https://m.mobilelegends.com/en/rank through an API. Teddy fully synchronizes the data every day and is summarized by WIN,USE,and BAN: \n \
+                              \n\nThe data is further sorted by the following attributes: \n**elo** (All, Legend+, Mythic 400pts+), \n \
                               \nIf you get a warning `No TierData Found.`. \nDon't worry! This means that the specific data file is *missing* and is likely being synchronized, so please be patient!"
             elif about=="commands":
                 about_title = "Commands"
                 desc = "Command Options List:\
-                       \n\n`/td` - Show KDA/WR%/USE% for this Week \
-                       \n- `region:(NA,SA,SE,EU)`, default:`All` \
-                       \n- `mode:(Brawl,Classic,Rank)`, default: `All-Modes` \
+                       \n\n`/td` - Show BAN%/WR%/USE% for this Week \
                        \n- `elo:(Normal,High,Very-High)`, default: `All-Levels` \
-                       \n- `period:(Month,Week,All-Time)`, default: `Week` \
+                       \n- `period:(Day,Week,Month,All-Time)`, default: `Day` ***COMING SOON*** \
                        \n- `sort:(Top, Bottom)`, default: Top \
                        \n- `role:(Fighter,Mage,Support,Assassin,Marksman,Tank)`, default: `none` \
-                       \n- `view:(Normal,Meta,Role,WinRate,KDA,Use)` default: `Normal` - The view changes from top5 KDA/WR/USE, top10 by KDA,WR,or USE, or top3 by Meta or Role \
-                       \n- `chartview:`(Mode x WIN/KDA/USE)+(box optional)`, default: `none` - Historical chart or averages, based on Top5 for each filter"
+                       \n- `view:(Normal,Meta,Role,WinRate,BAN,Use)` default: `Normal` - The view changes from top5 BAN/WR/USE, top10 by BAN,WR,or USE, or top3 by Meta or Role \
+                       \n- `chartview:`(Elo x WIN/BAN/USE)+(box optional)`, default: `none` - Historical chart or averages, based on Top5 for each filter"
 
-            elif about=="outlier":
-                about_title = "Outliers"
-                desc = "Occasionally, you may see an extremely high statistic like... 40 KDA?!? \n*How does this happen?* \
-                            \n\nSeveral factors, when combined, create outliers. These include: small sample sizes, no region-defined, and no elo defined. \
-                            \n\nWhen no attributes are defined, the API lumps them into the 'ALL' category. \
-                            \nFor example, *a smurf account with no region or location services may get matched-up against inexperienced players, playing their main heroes, and averaging +30KDA for their first 20-30 games. Flex, Troll, and so forth*. \
-                            \nIn this example, elo, region, and game-mode are unspecified. \
-                            \nBy default, Teddy searches 'All-Modes','All-Regions', and 'All-Elo' \
-                            \n\nIf you find an outlier, try defining an elo, region, or game mode to refine your search: \
-                            \ne.g. `/td mode:Classic region:EU elo:High` will give you MORE ACCURATE data than: `/td` alone"
             #Declare Embed
             helpembed = discord.Embed(
                 title=f" About: {about_title}",
                 description=f"{desc}\n"
             )
             if about_title == "The Data":
-                helpembed.set_image(url="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main/docs/img/sankeymatic_3000x1200.png?raw=true")
+                helpembed.set_image(url="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main.rd/docs/img/sankeymatic_2000x1200.png?raw=true")
             helpembed.set_thumbnail(url="https://icons.iconarchive.com/icons/custom-icon-design/flatastic-2/256/help-desk-icon.png")
 
             if about=="show":
                 helpembed.add_field(name=f"Version:",
                                     value=f"{version}\n\n")
                 helpembed.add_field(name=f"How to Use:",
-                                    value=f"Teddy provides the top 5 heroes sorted by their respective **WinRate%**, **KDA**, and **UseRate%** using the basic slash command: `/td`" \
-                                          f"\n\nAdditional arguments allow you to inspect the tier data based on the attributes: elo, mode, and region.."
-                                          f"\nFor example, `/td mode:Rank region:NA` will show you *top performing heroes in rank for North America*"
+                                    value=f"Teddy provides the top 5 heroes sorted by their respective **WinRate%**, **BAN**, and **UseRate%** using the basic slash command: `/td`" \
+                                          f"\n\nAdditional arguments allow you to inspect the tier data based on the elo attribute.."
+                                          f"\nFor example, `/td elo:Legend ` will show you *top performing heroes in rank for the Legend+ elo bracket.*"
                                           f"\n\nYou can also filter by **role** (Assassin, Fighter, Mage, etc) and view the reverse **sort** of the tier. Give it a try!",
                                     inline=False
                                     )
@@ -389,36 +341,31 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
             if os.path.isdir(latest_run):  # check for raw data path
                 ##### START JSON SCRAPER ######
                 #### Transform Arguments
-                r = region.replace("All", "all")
-                m = mode.replace("All", "All-Modes")
-                lvl = elo.replace("All", "All-Levels")
-                dt = period.replace("AT", "All-Time").replace("Week", "This Week").replace("Month", "This Month")
+
+                dt = period.replace("Day", "Today").replace("Week", "This Week").replace("Month", "This Month").replace("Season", "This Season")
 
                 #### FIND FILE
-                jsonfile = f'{latest_run}/en/{r}/{period}.{lvl}.{m}.json'
+                jsonfile = f'{latest_run}/{elo}.json'
                 if os.path.exists(jsonfile):
                     log.info("Requesting: " + jsonfile)
 
                     runtime = latest_run.replace(rawpath, "")
 
                     #### COLOR DECORATION and THUMBNAIL####
-                    if mode == "Rank":
-                        color = discord.Color.red()
-                        ico = "https://static.wikia.nocookie.net/mobile-legends/images/4/40/Ranked.png"
-                    elif mode == "Brawl":
-                        color = discord.Color.blue()
-                        ico = "https://static.wikia.nocookie.net/mobile-legends/images/3/37/Brawl.png"
-                    elif mode == "Classic":
-                        color = discord.Color.gold()
-                        ico = "https://static.wikia.nocookie.net/mobile-legends/images/5/57/Classic.png"
-                    else:
+                    if elo == "All":
                         color = discord.Color.teal()
-                        ico = "https://static.wikia.nocookie.net/mobile-legends/images/e/ec/Custom.png"
+                        ico = "https://static.wikia.nocookie.net/mobile-legends/images/2/26/Epic.png"
+                    elif elo == "Legend":
+                        color = discord.Color.gold()
+                        ico = "https://static.wikia.nocookie.net/mobile-legends/images/1/10/Legend.png"
+                    elif elo == "Mythic":
+                        color = discord.Color.purple()
+                        ico = "https://static.wikia.nocookie.net/mobile-legends/images/e/ec/Mythic.png"
 
                     #### DECLARE EMBED ####
                     embed = discord.Embed(
-                        title=f"{mode} TierData for {dt}",
-                        description=f"{sort} Heroes (Region:{region}, Mode:{mode}, Elo:{elo})\n",
+                        title=f"TierData for {dt}",
+                        description=f"{sort} Heroes (Elo:{elo})\n",
                         color=color)
 
                     #### Generate Thumbnail ####
@@ -429,44 +376,44 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                     if chartview!="null" and role=="null":
                         view = "null"
                         box = 0
-                        md=mode.replace("All", "All-modes")
+                        
 
-                        #region Mode Conditions
-                        if chartview=="modexwin":
-                            requestchart = "Mode X Win"
-                            filename = f"{md}.win.png"
-                            charttype = "baseXmode"
+                        #region Elo Conditions
+                        if chartview=="eloxwin":
+                            requestchart = "Elo X Win"
+                            filename = f"{elo}.win.png"
+                            charttype = "baseXall.rd"
 
-                        elif chartview=="modexkda":
-                            requestchart = "Mode X KDA"
-                            filename = f"{md}.kda.png"
-                            charttype = "baseXmode"
+                        elif chartview=="eloxban":
+                            requestchart = "Elo X BAN"
+                            filename = f"{elo}.ban.png"
+                            charttype = "baseXall.rd"
 
-                        elif chartview=="modexuse":
-                            requestchart = "Mode X USE"
-                            filename = f"{md}.use.png"
-                            charttype = "baseXmode"
+                        elif chartview=="eloxuse":
+                            requestchart = "Elo X USE"
+                            filename = f"{elo}.use.png"
+                            charttype = "baseXall.rd"
 
-                        elif chartview=="modexwinbox":
-                            requestchart = "Mode X Win (box)"
-                            filename = f"{md}.win.png"
-                            charttype = "baseXmode-box"
+                        elif chartview=="eloxwinbox":
+                            requestchart = "Elo X Win (box)"
+                            filename = f"{elo}.win.png"
+                            charttype = "baseXall-box.rd"
                             box=1
 
-                        elif chartview=="modexkdabox":
-                            requestchart = "Mode X KDA (box)"
-                            filename = f"{md}.kda.png"
-                            charttype = "baseXmode-box"
+                        elif chartview=="eloxbanbox":
+                            requestchart = "Elo X BAN (box)"
+                            filename = f"{elo}.ban.png"
+                            charttype = "baseXall-box.rd"
                             box=1
 
-                        elif chartview=="modexusebox":
-                            requestchart = "Mode X USE (box)"
-                            filename = f"{md}.use.png"
-                            charttype = "baseXmode-box"
+                        elif chartview=="eloxusebox":
+                            requestchart = "Elo X USE (box)"
+                            filename = f"{elo}.use.png"
+                            charttype = "baseXall-box.rd"
                             box=1
                         #endregion
 
-                        chart = f"{chartpath}{charttype}/{r}/{lvl}/{filename}"
+                        chart = f"{chartpath}{charttype}/{filename}"
 
                         #Check to see if chart exists
                         if not os.path.exists(chart):
@@ -497,43 +444,43 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                     elif chartview != "null" and role != "null":
                         view = "null"
                         box = 0
-                        md = mode.replace("All", "All-modes")
+                        md = elo.replace("All", "All-Elo")
                         role = role.capitalize()
 
-                        if chartview == "modexwin":
-                            requestchart = "Mode X Win"
+                        if chartview == "eloxwin":
+                            requestchart = "Elo X Win"
                             filename = f"{role}.win.png"
-                            charttype = "baseXrole"
+                            charttype = "baseXrole.rd"
 
-                        elif chartview == "modexkda":
-                            requestchart = "Mode X KDA"
-                            filename = f"{role}.kda.png"
-                            charttype = "baseXrole"
+                        elif chartview == "eloxban":
+                            requestchart = "Elo X BAN"
+                            filename = f"{role}.ban.png"
+                            charttype = "baseXrole.rd"
 
-                        elif chartview == "modexuse":
-                            requestchart = "Mode X USE"
+                        elif chartview == "eloxuse":
+                            requestchart = "Elo X USE"
                             filename = f"{role}.use.png"
-                            charttype = "baseXrole"
+                            charttype = "baseXrole.rd"
 
-                        elif chartview == "modexwinbox":
-                            requestchart = "Mode X Win (box)"
+                        elif chartview == "eloxwinbox":
+                            requestchart = "Elo X Win (box)"
                             filename = f"{role}.win.png"
-                            charttype = "baseXrole-box"
+                            charttype = "baseXrole-box.rd"
                             box = 1
 
-                        elif chartview == "modexkdabox":
-                            requestchart = "Mode X KDA (box)"
-                            filename = f"{role}.kda.png"
-                            charttype = "baseXrole-box"
+                        elif chartview == "eloxbanbox":
+                            requestchart = "Elo X BAN (box)"
+                            filename = f"{role}.ban.png"
+                            charttype = "baseXrole-box.rd"
                             box = 1
 
-                        elif chartview == "modexusebox":
-                            requestchart = "Mode X USE (box)"
+                        elif chartview == "eloxusebox":
+                            requestchart = "Elo X USE (box)"
                             filename = f"{role}.use.png"
-                            charttype = "baseXrole-box"
+                            charttype = "baseXrole-box.rd"
                             box = 1
 
-                        chart = f"{chartpath}{charttype}/{r}/{m}/{lvl}/{filename}"
+                        chart = f"{chartpath}{charttype}/{lvl}/{filename}"
 
                             # Check to see if chart exists
                         if not os.path.exists(chart):
@@ -570,7 +517,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                         outlier = 0
                         with open(jsonfile) as j:
                             data = json.load(j)
-                            rows = [v for k, v in data["data"].items()]
 
                             ######## SHOW VIEW OPTIONS#
                             if view == "delta":
@@ -579,7 +525,7 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                                                           Sorted by the change in table rank, including the change in value.\n\n", inline=False)
 
                                 # Check for Previous Files
-                                pjsonfile = f'{previous_run}/en/{r}/{period}.{lvl}.{m}.json'
+                                pjsonfile = f'{previous_run}/{elo}.json'
                                 if os.path.isdir(previous_run) and os.path.exists(pjsonfile):
                                     log.info("Requesting: " + pjsonfile)
                                     pruntime = previous_run.replace(rawpath, "")
@@ -587,43 +533,74 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     # Load previous file
                                     with open(pjsonfile) as pj:
                                         pdata = json.load(pj)
-                                        prows = [w for l, w in pdata["data"].items()]
-                                        pdf = pd.DataFrame(prows, columns=['wrank', 'urank', 'kdarank', 'name', 'win', 'use','kda'])
+
+                                        pdf = json_normalize(pdata, ['data', 'data'])
+
+                                        #region CREATE PREVIOUS TABLE
+                                        # convert from strings:
+                                        pdf['win'] = list(map(lambda x: x[:-1], pdf['win'].values))
+                                        pdf['use'] = list(map(lambda x: x[:-1], pdf['use'].values))
+                                        pdf['ban'] = list(map(lambda x: x[:-1], pdf['ban'].values))
+
+                                        pdf['win'] = [float(x) for x in pdf['win'].values]
+                                        pdf['use'] = [float(x) for x in pdf['use'].values]
+                                        pdf['ban'] = [float(x) for x in pdf['ban'].values]
+
+                                        # add ranking column
+                                        pdf = pdf.sort_values(by=['use'], ascending=False)
+                                        pdf['urank'] = range(1, len(pdf) + 1)
+                                        pdf = pdf.sort_values(by=['win'], ascending=False)
+                                        pdf['wrank'] = range(1, len(pdf) + 1)
+                                        pdf = pdf.sort_values(by=['ban'], ascending=False)
+                                        pdf['banrank'] = range(1, len(pdf) + 1)
+                                        #endregion
                                         #print(f"Previous Table:\n {pdf}")
 
-                                        df = pd.DataFrame(rows, columns=['kdarank','wrank','urank','name', 'win', 'use', 'kda'])
+
+                                        df = json_normalize(data, ['data', 'data'])
+
+                                        # region CREATE CURRENT TABLE
+                                        # convert from strings:
+                                        df['win'] = list(map(lambda x: x[:-1], df['win'].values))
+                                        df['use'] = list(map(lambda x: x[:-1], df['use'].values))
+                                        df['ban'] = list(map(lambda x: x[:-1], df['ban'].values))
+
+                                        df['win'] = [float(x) for x in df['win'].values]
+                                        df['use'] = [float(x) for x in df['use'].values]
+                                        df['ban'] = [float(x) for x in df['ban'].values]
+
+                                        # add ranking column
+                                        df = df.sort_values(by=['use'], ascending=False)
+                                        df['urank'] = range(1, len(df) + 1)
+                                        df = df.sort_values(by=['win'], ascending=False)
+                                        df['wrank'] = range(1, len(df) + 1)
+                                        df = df.sort_values(by=['ban'], ascending=False)
+                                        df['banrank'] = range(1, len(df) + 1)
+                                        # endregion
+
                                         # MERGE CURRENT WITH PREVIOUS
                                         df = df.merge(pdf, how='left', on='name')
 
                                         # region DataFrame Calculations
-                                        # convert to string
-                                        df['win_x'] = list(map(lambda x: x[:-1], df['win_x'].values))
-                                        df['use_x'] = list(map(lambda x: x[:-1], df['use_x'].values))
-                                        df['win_y'] = list(map(lambda x: x[:-1], df['win_y'].values))
-                                        df['use_y'] = list(map(lambda x: x[:-1], df['use_y'].values))
-                                        df['win_x'] = [float(x) for x in df['win_x'].values]
-                                        df['use_x'] = [float(x) for x in df['use_x'].values]
-                                        df['win_y'] = [float(x) for x in df['win_y'].values]
-                                        df['use_y'] = [float(x) for x in df['use_y'].values]
 
                                         # CALCULATE DELTAS
                                         df['urank_d'] = df['urank_x'] - df['urank_y']
                                         df['wrank_d'] = df['wrank_x'] - df['wrank_y']
-                                        df['kdarank_d'] = df['kdarank_x'] - df['kdarank_y']
+                                        df['banrank_d'] = df['banrank_x'] - df['banrank_y']
 
-                                        df['win_d'] = df['win_x'] - df['win_y']
-                                        df['use_d'] = df['use_x'] - df['use_y']
-                                        df['kda_d'] = df['kda_x'] - df['kda_y']
+                                        df['win_d'] = df['win_y'] - df['win_x']
+                                        df['use_d'] = df['use_y'] - df['use_x']
+                                        df['ban_d'] = df['ban_x'] - df['ban_y']
 
                                         df['win_d'] = df['win_d'].round(2)
                                         df['use_d'] = df['use_d'].round(2)
-                                        df['kda_d'] = df['kda_d'].round(2)
+                                        df['ban_d'] = df['ban_d'].round(2)
                                         # endregion
                                         #print(f"Merged Table:\n {df}")
 
                                         #region ColumnHeader Mappings
 
-                                        r = "RANK"
+                                        r = "RATING"
                                         r = r.center(9, " ")
                                         rd = "R▲"
                                         rd = rd.center(6, " ")
@@ -635,14 +612,14 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                         w = w.center(6, " ")
                                         u = "USE"
                                         u = u.center(6, " ")
-                                        k = "KDA"
+                                        k = "BAN"
                                         k = k.center(6, " ")
 
                                         wd = "WIN▲"
                                         wd = wd.center(6, " ")
                                         ud = "USE▲"
                                         ud = ud.center(6, " ")
-                                        kd = "KDA▲"
+                                        kd = "BAN▲"
                                         kd = kd.center(6, " ")
 
                                         # print (df.columns)
@@ -650,13 +627,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
 
                                         for crit in dsort_by:
                                             report = "\n"
-
-                                            # check for outlier
-                                            if (df['kda_x'] > kdalim).any() or (df['win_x'] == winlim).any() or (
-                                                    df['use_x'] == uselim).any():
-                                                outlier += 1
-
-                                                log.info(f"We have an outlier (current).")
 
                                             # filter by role
                                             if role != "null":
@@ -726,34 +696,32 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                                 dfd.columns = dfd.columns.astype(str)
                                                 dfd.columns = ('`' + dfd.columns + '`')
 
-                                            elif crit == "kdarank_d":
-                                                title = "KDA+/-"
-                                                dfd = dfs.reindex(columns=[str(crit), '-', 'name','kdarank_x','kdarank_y','kda_x', 'kda_d'])
+                                            elif crit == "banrank_d":
+                                                title = "BAN+/-"
+                                                dfd = dfs.reindex(columns=[str(crit), '-', 'name','banrank_x','banrank_y','ban_x', 'ban_d'])
                                                 #print(f"Pre-Table for {crit}:\n {dfd}")
 
                                                 # concat & format field
-                                                dfd['kdarank_d'] = dfd['kdarank_d'].mask(dfd['kdarank_d'] >= 0, ("+" + dfd['kdarank_d'].astype(str)))
-                                                dfd['kdarank'] = dfd['kdarank_x'].astype(str) + " > " + dfd['kdarank_y'].astype(str)
-                                                dfd['kda_d'] = dfd['kda_d'].mask(dfd['kda_d'] >= 0,("+" + dfd['kda_d'].astype(str)))
+                                                dfd['banrank_d'] = dfd['banrank_d'].mask(dfd['banrank_d'] >= 0, ("+" + dfd['banrank_d'].astype(str)))
+                                                dfd['banrank'] = dfd['banrank_x'].astype(str) + " > " + dfd['banrank_y'].astype(str)
+                                                dfd['ban_d'] = dfd['ban_d'].mask(dfd['ban_d'] >= 0,("+" + dfd['ban_d'].astype(str)))
 
-                                                #drop and replace outliers
-                                                dfd['kda_x'] = dfd['kda_x'].mask(dfd['kda_x'].replace('\+|\-','', regex=True).astype(float) > kdalim, "---")
-                                                dfd['kda_d'] = dfd['kda_d'].mask(dfd['kda_d'].replace('\+|\-','', regex=True).astype(float) > kdalim, "---")
-                                                cols = ['kdarank_d', 'kdarank', '-', 'name', 'kda_x', 'kda_d']
+
+                                                cols = ['banrank_d', 'banrank', '-', 'name', 'ban_x', 'ban_d']
                                                 dfd = dfd[cols]
 
                                                 # add padding:
-                                                dfd['kdarank'] = ('`' + dfd['kdarank'].str.center(9) + '`')
-                                                dfd['kdarank_d'] = dfd['kdarank_d'].astype(str)
-                                                dfd['kdarank_d'] = ('`' + dfd['kdarank_d'].str.center(6) + '`')
+                                                dfd['banrank'] = ('`' + dfd['banrank'].str.center(9) + '`')
+                                                dfd['banrank_d'] = dfd['banrank_d'].astype(str)
+                                                dfd['banrank_d'] = ('`' + dfd['banrank_d'].str.center(6) + '`')
                                                 dfd['name'] = ('`' + dfd['name'].str.center(13) + '`')
-                                                dfd['kda_x'] = dfd['kda_x'].astype(str)
-                                                dfd['kda_x'] = ('`' + dfd['kda_x'].str.center(6) + '`')
-                                                dfd['kda_d'] = dfd['kda_d'].astype(str)
-                                                dfd['kda_d'] = ('`' + dfd['kda_d'].str.center(6) + '`')
+                                                dfd['ban_x'] = dfd['ban_x'].astype(str)
+                                                dfd['ban_x'] = ('`' + dfd['ban_x'].str.center(6) + '`')
+                                                dfd['ban_d'] = dfd['ban_d'].astype(str)
+                                                dfd['ban_d'] = ('`' + dfd['ban_d'].str.center(6) + '`')
 
                                                 # format header:
-                                                dfd.rename(columns={'kdarank_d': rd, 'kdarank': r, '-': i, 'name': n, 'kda_x': k,'kda_d': kd}, inplace=True)
+                                                dfd.rename(columns={'banrank_d': rd, 'banrank': r, '-': i, 'name': n, 'ban_x': k,'ban_d': kd}, inplace=True)
                                                 dfd.columns = dfd.columns.astype(str)
                                                 dfd.columns = ('`' + dfd.columns + '`')
 
@@ -786,7 +754,7 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                                 dfd.columns = dfd.columns.astype(str)
                                                 dfd.columns = ('`' + dfd.columns + '`')
 
-                                            print(f"Rebuilt Table for {crit}:\n {dfd}")
+                                            #print(f"Rebuilt Table for {crit}:\n {dfd}")
 
                                             # OUTPUT TO TABLE
                                             table = dfd.to_string(index=False)
@@ -803,8 +771,8 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     log.warning(f"Bad Request: Missing: {pjsonfile} \
                                                                 Make sure {previous_run} exists.")
                                     embed = discord.Embed(
-                                        title=f"{mode} TierData for {dt} > {previous_run} (Delta Values)",
-                                        description=f"{sort} Differences (Region:{region}, Mode:{mode}, Elo:{elo})\n",
+                                        title=f"TierData for {dt} > {previous_run} (Delta Values)",
+                                        description=f"{sort} Differences (Elo:{elo})\n",
                                         color=0xFF5733)
                                     embed.set_thumbnail(
                                         url="https://icons.iconarchive.com/icons/paomedia/small-n-flat/256/sign-error-icon.png")
@@ -818,13 +786,30 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 embed.add_field(name=f"Meta View: ", value=f"Heroes by Lane, Use%", inline=False)
                                 for ln in lanes:
                                     report = "\n"
-                                    df = pd.DataFrame(rows, columns=['urank','name', 'win', 'use', 'kda'])
+
+                                    df = json_normalize(data, ['data', 'data'])
+
+                                    # convert from strings:
+                                    df['win'] = list(map(lambda x: x[:-1], df['win'].values))
+                                    df['use'] = list(map(lambda x: x[:-1], df['use'].values))
+                                    df['ban'] = list(map(lambda x: x[:-1], df['ban'].values))
+
+                                    df['win'] = [float(x) for x in df['win'].values]
+                                    df['use'] = [float(x) for x in df['use'].values]
+                                    df['ban'] = [float(x) for x in df['ban'].values]
+
+                                    # add ranking column
+                                    df = df.sort_values(by=['use'], ascending=False)
+                                    df['urank'] = range(1, len(df) + 1)
+                                    df = df.sort_values(by=['win'], ascending=False)
+                                    df['wrank'] = range(1, len(df) + 1)
+                                    df = df.sort_values(by=['ban'], ascending=False)
+                                    df['banrank'] = range(1, len(df) + 1)
+
+
                                     rslt = getattr(laning, ln)
                                     df = df[df['name'].isin(rslt)]
 
-                                    # check for outlier
-                                    if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (df['use'] == uselim).any():
-                                        outlier += 1
 
                                     if ln == 'roam':
                                         loji = '<:roam:864272305310924820>'
@@ -842,9 +827,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     else:
                                         df = df.sort_values('urank', ascending=True).tail(3)
 
-                                    #replace outlier with xxx
-                                    #df['kda'] = df['kda'].mask(df['kda'] > kdalim, 20.0)
-                                    df['kda'] = df['kda'].mask(df['kda'] > kdalim, "---")
 
                                     #### Add Icon Column
                                     df['o'] = df['name'].str.lower()
@@ -856,13 +838,15 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     df['rank'] = df['urank'].astype(str)
                                     df['rank'] = ('`' + df['rank'].str.center(4) + '`')
                                     df['name'] = ('`' + df['name'].str.center(13) + '`')
+                                    df['win'] = df['win'].astype(str)
                                     df['win'] = ('`' + df['win'].str.center(6) + '`')
+                                    df['use'] = df['use'].astype(str)
                                     df['use'] = ('`' + df['use'].str.center(6) + '`')
-                                    df['kda'] = df['kda'].astype(str)
-                                    df['kda'] = ('`' + df['kda'].str.center(6) + '`')
+                                    df['ban'] = df['ban'].astype(str)
+                                    df['ban'] = ('`' + df['ban'].str.center(6) + '`')
 
                                     # REBUILD
-                                    df = df.reindex(columns=['rank', '-', 'name', 'win', 'use', 'kda'])
+                                    df = df.reindex(columns=['rank', '-', 'name', 'win', 'use', 'ban'])
 
                                     # FORMAT COLUMN HEADER
                                     r = "RANK"
@@ -875,9 +859,9 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     w = w.center(6, " ")
                                     u = "USE"
                                     u = u.center(6, " ")
-                                    k = "KDA"
+                                    k = "BAN"
                                     k = k.center(6, " ")
-                                    df.rename(columns={'rank': r, '-': i, 'name': n, 'win': w, 'use': u, 'kda': k}, inplace=True)
+                                    df.rename(columns={'rank': r, '-': i, 'name': n, 'win': w, 'use': u, 'ban': k}, inplace=True)
                                     df.columns = df.columns.astype(str)
                                     df.columns = ('`' + df.columns + '`')
                                     # print (df.columns)
@@ -898,15 +882,29 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 embed.add_field(name=f"Role View: ", value=f"Heroes by Role, Use%", inline=False)
                                 for p in prof:
                                     report = "\n"
-                                    df = pd.DataFrame(rows, columns=['urank', 'name', 'win', 'use', 'kda'])
+
+                                    df = json_normalize(data, ['data', 'data'])
+
+                                    # convert from strings:
+                                    df['win'] = list(map(lambda x: x[:-1], df['win'].values))
+                                    df['use'] = list(map(lambda x: x[:-1], df['use'].values))
+                                    df['ban'] = list(map(lambda x: x[:-1], df['ban'].values))
+
+                                    df['win'] = [float(x) for x in df['win'].values]
+                                    df['use'] = [float(x) for x in df['use'].values]
+                                    df['ban'] = [float(x) for x in df['ban'].values]
+
+                                    # add ranking column
+                                    df = df.sort_values(by=['use'], ascending=False)
+                                    df['urank'] = range(1, len(df) + 1)
+                                    df = df.sort_values(by=['win'], ascending=False)
+                                    df['wrank'] = range(1, len(df) + 1)
+                                    df = df.sort_values(by=['ban'], ascending=False)
+                                    df['banrank'] = range(1, len(df) + 1)
+
+
                                     rslt = getattr(roles, p)
                                     df = df[df['name'].isin(rslt)]
-
-                                    # check for outlier
-                                    if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (
-                                            df['use'] == uselim).any():
-                                        outlier += 1
-                                        log.info(f"We have an outlier.")
 
                                     if p == 'support':
                                         poji = '<:Support_Icon:864271610797490177>'
@@ -926,9 +924,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     else:
                                         df = df.sort_values('urank', ascending=True).tail(3)
 
-                                    #replace with xxx
-                                    #df['kda'] = df['kda'].mask(df['kda'] > kdalim, 20.0)
-                                    df['kda'] = df['kda'].mask(df['kda'] > kdalim, "---")
 
                                     #### Add Icon Column
                                     df['o'] = df['name'].str.lower()
@@ -940,13 +935,15 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     df['rank'] = df['urank'].astype(str)
                                     df['rank'] = ('`' + df['rank'].str.center(4) + '`')
                                     df['name'] = ('`' + df['name'].str.center(13) + '`')
+                                    df['win'] = df['win'].astype(str)
                                     df['win'] = ('`' + df['win'].str.center(6) + '`')
+                                    df['use'] = df['use'].astype(str)
                                     df['use'] = ('`' + df['use'].str.center(6) + '`')
-                                    df['kda'] = df['kda'].astype(str)
-                                    df['kda'] = ('`' + df['kda'].str.center(6) + '`')
+                                    df['ban'] = df['ban'].astype(str)
+                                    df['ban'] = ('`' + df['ban'].str.center(6) + '`')
 
                                     # REBUILD
-                                    df = df.reindex(columns=['rank', '-', 'name', 'win', 'use', 'kda'])
+                                    df = df.reindex(columns=['rank', '-', 'name', 'win', 'use', 'ban'])
 
                                     # FORMAT COLUMN HEADER
                                     r = "RANK"
@@ -959,9 +956,9 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     w = w.center(6, " ")
                                     u = "USE"
                                     u = u.center(6, " ")
-                                    k = "KDA"
+                                    k = "BAN"
                                     k = k.center(6, " ")
-                                    df.rename(columns={'rank': r, '-': i, 'name': n, 'win': w, 'use': u, 'kda': k}, inplace=True)
+                                    df.rename(columns={'rank': r, '-': i, 'name': n, 'win': w, 'use': u, 'ban': k}, inplace=True)
                                     df.columns = df.columns.astype(str)
                                     df.columns = ('`' + df.columns + '`')
                                     # print (df.columns)
@@ -979,16 +976,34 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
 
                             elif view=="normal":
                                 log.info(f"Request Normal View")
+
                                 for crit in sort_by:
                                     report = "\n"
-                                    df = pd.DataFrame(rows, columns=[str(crit), 'name', 'win', 'use', 'kda'])
 
-                                    # check for outlier
-                                    if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (
-                                            df['use'] == uselim).any():
-                                        outlier += 1
+                                    df = json_normalize(data, ['data', 'data'])
 
-                                        log.info(f"We have an outlier.")
+                                    # convert from strings:
+                                    df['win'] = list(map(lambda x: x[:-1], df['win'].values))
+                                    df['use'] = list(map(lambda x: x[:-1], df['use'].values))
+                                    df['ban'] = list(map(lambda x: x[:-1], df['ban'].values))
+
+                                    df['win'] = [float(x) for x in df['win'].values]
+                                    df['use'] = [float(x) for x in df['use'].values]
+                                    df['ban'] = [float(x) for x in df['ban'].values]
+
+                                    # add ranking column
+                                    df = df.sort_values(by=['use'], ascending=False)
+                                    df['urank'] = range(1, len(df) + 1)
+                                    df = df.sort_values(by=['win'], ascending=False)
+                                    df['wrank'] = range(1, len(df) + 1)
+                                    df = df.sort_values(by=['ban'], ascending=False)
+                                    df['banrank'] = range(1, len(df) + 1)
+
+                                    #### Add Icon Column
+                                    df['o'] = df['name'].str.lower()
+                                    df['o'] = df['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
+                                    df['-'] = df['o'].map(mojimap.moji)
+                                    del df['o']
 
                                     # filter by role
                                     if role != "null":
@@ -1013,31 +1028,23 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
 
                                         # sort
                                     if sort == "Top":
-                                        df = df.sort_values(str(crit), ascending=True).head(5)
+                                        df = df.sort_values(crit, ascending=True).head(5)
                                     else:
-                                        df = df.sort_values(str(crit), ascending=True).tail(5)
-
-                                    #replace with xxx
-                                    #df['kda'] = df['kda'].mask(df['kda'] > kdalim, 20.0)
-                                    df['kda'] = df['kda'].mask(df['kda'] > kdalim, "---")
-
-                                    #### Add Icon Column
-                                    df['o'] = df['name'].str.lower()
-                                    df['o'] = df['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
-                                    df['-'] = df['o'].map(mojimap.moji)
-                                    del df['o']
+                                        df = df.sort_values(crit, ascending=True).tail(5)
 
                                     #### Add Padding and FORMAT:
                                     df['rank'] = df[str(crit)].astype(str)
                                     df['rank'] = ('`' + df['rank'].str.center(4) + '`')
                                     df['name'] = ('`' + df['name'].str.center(13) + '`')
+                                    df['win'] = df['win'].astype(str)
                                     df['win'] = ('`' + df['win'].str.center(6) + '`')
+                                    df['use'] = df['use'].astype(str)
                                     df['use'] = ('`' + df['use'].str.center(6) + '`')
-                                    df['kda'] = df['kda'].astype(str)
-                                    df['kda'] = ('`' + df['kda'].str.center(6) + '`')
+                                    df['ban'] = df['ban'].astype(str)
+                                    df['ban'] = ('`' + df['ban'].str.center(6) + '`')
 
                                     # REBUILD
-                                    df = df.reindex(columns=['rank', '-', 'name', 'win', 'use', 'kda'])
+                                    df = df.reindex(columns=['rank', '-', 'name', 'win', 'use', 'ban'])
 
                                     # FORMAT COLUMN HEADER
                                     r = "RANK"
@@ -1050,9 +1057,9 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     w = w.center(6, " ")
                                     u = "USE"
                                     u = u.center(6, " ")
-                                    k = "KDA"
+                                    k = "BAN"
                                     k = k.center(6, " ")
-                                    df.rename(columns={'rank': r, '-': i, 'name': n, 'win': w, 'use': u, 'kda': k}, inplace=True)
+                                    df.rename(columns={'rank': r, '-': i, 'name': n, 'win': w, 'use': u, 'ban': k}, inplace=True)
                                     df.columns = df.columns.astype(str)
                                     df.columns = ('`' + df.columns + '`')
                                     # print (df.columns)
@@ -1066,21 +1073,21 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                     #### Create Report Title
                                     if crit == "wrank":
                                         title = "WinRate%"
-                                    elif crit == "kdarank":
-                                        title = "KDA"
+                                    elif crit == "banrank":
+                                        title = "BAN"
                                     elif crit == "urank":
                                         title = "Use%"
 
                                     #### ADD EMBED FOR TABLE
                                     embed.add_field(name=f"Sorted by {title}", value=f"{report}", inline=False)
 
-                            elif view=="win" or view=="kda" or view=="use":
+                            elif view=="win" or view=="ban" or view=="use":
                                 if view == "win":
                                     crit = "wrank"
                                     title = "WinRate"
-                                elif view=="kda":
-                                    crit = "kdarank"
-                                    title = "KDA"
+                                elif view=="ban":
+                                    crit = "banrank"
+                                    title = "BAN"
                                 elif view =="use":
                                     crit = "urank"
                                     title = "USE"
@@ -1088,12 +1095,26 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 log.info(f"Request {title} View")
 
                                 report = "\n"
-                                df = pd.DataFrame(rows, columns=[str(crit), 'name', 'win', 'use', 'kda'])
+                                df = json_normalize(data, ['data', 'data'])
 
-                                # check for outlier
-                                if (df['kda'] > kdalim).any() or (df['win'] == winlim).any() or (df['use'] == uselim).any():
-                                    outlier += 1
-                                    log.info(f"We have an outlier.")
+                                # convert from strings:
+                                df['win'] = list(map(lambda x: x[:-1], df['win'].values))
+                                df['use'] = list(map(lambda x: x[:-1], df['use'].values))
+                                df['ban'] = list(map(lambda x: x[:-1], df['ban'].values))
+
+                                df['win'] = [float(x) for x in df['win'].values]
+                                df['use'] = [float(x) for x in df['use'].values]
+                                df['ban'] = [float(x) for x in df['ban'].values]
+
+                                # add ranking column
+                                df = df.sort_values(by=['use'], ascending=False)
+                                df['urank'] = range(1, len(df) + 1)
+                                df = df.sort_values(by=['win'], ascending=False)
+                                df['wrank'] = range(1, len(df) + 1)
+                                df = df.sort_values(by=['ban'], ascending=False)
+                                df['banrank'] = range(1, len(df) + 1)
+
+
 
                                 # filter by role
                                 if role != "null":
@@ -1122,9 +1143,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 else:
                                     df = df.sort_values(str(crit), ascending=True).tail(10)
 
-                                #replace with xxx
-                                #df['kda'] = df['kda'].mask(df['kda'] > kdalim, 20.0)
-                                df['kda'] = df['kda'].mask(df['kda'] > kdalim, "---")
 
                                 #### Add Icon Column
                                 df['o'] = df['name'].str.lower()
@@ -1136,13 +1154,15 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 df['rank'] = df[str(crit)].astype(str)
                                 df['rank'] = ('`' + df['rank'].str.center(4) + '`')
                                 df['name'] = ('`' + df['name'].str.center(13) + '`')
+                                df['win'] = df['win'].astype(str)
                                 df['win'] = ('`' + df['win'].str.center(6) + '`')
+                                df['use'] = df['use'].astype(str)
                                 df['use'] = ('`' + df['use'].str.center(6) + '`')
-                                df['kda'] = df['kda'].astype(str)
-                                df['kda'] = ('`' + df['kda'].str.center(6) + '`')
+                                df['ban'] = df['ban'].astype(str)
+                                df['ban'] = ('`' + df['ban'].str.center(6) + '`')
 
                                 # REBUILD
-                                df = df.reindex(columns=['rank', '-', 'name', 'win', 'use', 'kda'])
+                                df = df.reindex(columns=['rank', '-', 'name', 'win', 'use', 'ban'])
 
                                 # FORMAT COLUMN HEADER
                                 r = "RANK"
@@ -1155,9 +1175,9 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 w = w.center(6, " ")
                                 u = "USE"
                                 u = u.center(6, " ")
-                                k = "KDA"
+                                k = "BAN"
                                 k = k.center(6, " ")
-                                df.rename(columns={'rank': r, '-': i, 'name': n, 'win': w, 'use': u, 'kda': k}, inplace=True)
+                                df.rename(columns={'rank': r, '-': i, 'name': n, 'win': w, 'use': u, 'ban': k}, inplace=True)
                                 df.columns = df.columns.astype(str)
                                 df.columns = ('`' + df.columns + '`')
                                 # print (df.columns)
@@ -1169,7 +1189,6 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                                 report += table
 
 
-
                                 #### ADD EMBED FOR TABLE
                                 embed.add_field(name=f"Sorted by {title}", value=f"{report}", inline=False)
                                 #print(f"{report}")
@@ -1178,7 +1197,7 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                         if outlier >= 1:
                             embed.add_field(name=f":rotating_light: Outlier Notice:",
                                             value=f":bear: Teddy has detected a statistically improbable anomaly in the data you have requested."
-                                                  f"\nTry using a filter such as `/td mode:Rank` to get more accurate results.",
+                                                  f"\nTry using a filter such as `/td elo:Legend` to get more accurate results.",
                                             inline=False)
 
                         #### ADD EMBED FOR Foot
@@ -1193,8 +1212,8 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
                 else:
                     log.warning(f"Bad Request: Missing: {jsonfile}")
                     embed = discord.Embed(
-                        title=f"{mode} TierData for {dt}",
-                        description=f"{sort} Heroes (Region:{region}, Mode:{mode}, Elo:{elo})\n",
+                        title=f"TierData for {dt}",
+                        description=f"{sort} Heroes (Elo:{elo})\n",
                         color=0xFF5733)
                     embed.set_thumbnail(url="https://icons.iconarchive.com/icons/paomedia/small-n-flat/256/sign-error-icon.png")
                     embed.add_field(name=f"No TierData Found", value=f"Source file missing. Please try again after the next data sync or refine your search.", inline=False)
@@ -1208,51 +1227,62 @@ async def _overall(ctx, region="All", mode="All", elo="All", period="Week", sort
 # endregion
 
 # region HERO TABLE GENERATOR
-regions = ["all", "NA", "SA", "SE", "EU"]
-modes = ["All-Modes", "Rank", "Brawl", "Classic"]
-lvls = ["All-Levels", "Normal", "High", "Very-High"]
-periods = ["Week", "AT", "Month"]
+lvls = ["All", "Legend", "Mythic"]
+periods = ["Day","Week","Month","AT", "Season"]
 
 # COMPILE HERO TABLES
 log.info("Compiling Lookup")
 
 # Create master table
-dfx = pd.DataFrame(columns=['name', 'win', 'use', 'kda', 'region', 'period', 'elo', 'mode'])
+dfx = pd.DataFrame(columns=['name', 'win', 'use', 'ban', 'elo','urank','wrank','banrank'])
 
 if os.path.isdir(latest_run):  # check for raw data path
     #### FIND FILES
-    for r in regions:
-        for period in periods:
-            for lvl in lvls:
-                for m in modes:
 
-                    jsonfile = f'{latest_run}/en/{r}/{period}.{lvl}.{m}.json'
-                    if os.path.exists(jsonfile):
-                        # print("Requesting: " + jsonfile)
-                        log.info("Requesting: " + jsonfile)
+    for lvl in lvls:
+        jsonfile = f'{latest_run}/{lvl}.json'
+        if os.path.exists(jsonfile):
+            # print("Requesting: " + jsonfile)
+            log.info("Requesting: " + jsonfile)
 
-                        ##### BUILD TABLES ####
-                        with open(jsonfile) as j:
-                            data = json.load(j)
-                            rows = [v for k, v in data["data"].items()]
+            ##### BUILD TABLES ####
+            with open(jsonfile) as j:
+                data = json.load(j)
 
-                            df = pd.DataFrame(rows, columns=['name', 'win', 'use', 'kda'])
+                df = json_normalize(data, ['data', 'data'])
 
-                            df['region'] = f"{r}"
-                            df['period'] = f"{period}"
-                            df['elo'] = f"{lvl}"
-                            df['mode'] = f"{m}"
-                            # dfx.append(df, ignore_index = True)
-                            dfx = pd.concat([dfx, df], axis=0)
-                            # print(df)
+                # convert from strings:
+                df['win'] = list(map(lambda x: x[:-1], df['win'].values))
+                df['use'] = list(map(lambda x: x[:-1], df['use'].values))
+                df['ban'] = list(map(lambda x: x[:-1], df['ban'].values))
 
-                    else:
-                        log.warning(f"Bad Request: Missing: {jsonfile}")
-    # print(f"Combined:{dfx}")
+                df['win'] = [float(x) for x in df['win'].values]
+                df['use'] = [float(x) for x in df['use'].values]
+                df['ban'] = [float(x) for x in df['ban'].values]
+
+                # add ranking column
+                df = df.sort_values(by=['use'], ascending=False)
+                df['urank'] = range(1, len(df) + 1)
+                df = df.sort_values(by=['win'], ascending=False)
+                df['wrank'] = range(1, len(df) + 1)
+                df = df.sort_values(by=['ban'], ascending=False)
+                df['banrank'] = range(1, len(df) + 1)
+
+                df['elo'] = f"{lvl}"
+
+                # dfx.append(df, ignore_index = True)
+                dfx = pd.concat([dfx, df], axis=0)
+                #print(df)
+        else:
+            log.warning(f"Bad Request: Missing: {jsonfile}")
 else:
     log.warning(f"Bad Request: Missing: {latest_run}")
 
-log.debug(f"{dfx}")
+#elomoji
+roji = {'All': '<:Epic:910268690098974740>','Legend': '<:Legend:910268716044914688>','Mythic': '<:Mythic:910268741181374534>'}
+dfx['-'] = dfx['elo'].map(roji)
+#print(f"Combined:{dfx}")
+#log.debug(f"{dfx}")
 # endregion
 
 # region HERO SEARCH FUNCTION
@@ -1265,77 +1295,29 @@ log.debug(f"{dfx}")
                      option_type=3,
                      required=True
                  ),
-                 create_option(
-                     name="region",
-                     description="Look at TierData by REGION.",
-                     option_type=3,
-                     required=False,
-                     choices=[
-                         create_choice(
-                             name="EU",
-                             value="EU"),
-                         create_choice(
-                             name="NA",
-                             value="NA"),
-                         create_choice(
-                             name="SA",
-                             value="SA"),
-                         create_choice(
-                             name="SE",
-                             value="SE")
-                     ]
-                 ),
-                 create_option(
-                     name="mode",
-                     description="Look at TierData by GAME MODE.",
-                     option_type=3,
-                     required=False,
-                     choices=[
-                         create_choice(
-                             name="Brawl",
-                             value="Brawl"),
-                         create_choice(
-                             name="Classic",
-                             value="Classic"),
-                         create_choice(
-                             name="Rank",
-                             value="Rank")
-                     ]
-                 ),
-                 create_option(
-                     name="elo",
-                     description="Look at TierData by Player Performance!",
-                     option_type=3,
-                     required=False,
-                     choices=[
-                         create_choice(
-                             name="Normal",
-                             value="Normal"),
-                         create_choice(
-                             name="High",
-                             value="High"),
-                         create_choice(
-                             name="Very-High",
-                             value="Very-High")
-                     ]
-                 ),
-                 create_option(
-                     name="period",
-                     description="Look at TierData for the previous time-period.",
-                     option_type=3,
-                     required=False,
-                     choices=[
-                         create_choice(
-                             name="Month",
-                             value="Month"),
-                         create_choice(
-                             name="Week",
-                             value="Week"),
-                         create_choice(
-                             name="All-Time",
-                             value="AT")
-                     ]
-                 ),
+                 #create_option(
+                 #    name="period",
+                 #    description="Look at TierData for the previous time-period.",
+                 #    option_type=3,
+                 #    required=False,
+                 #    choices=[
+                 #        create_choice(
+                 #            name="Day",
+                 #            value="Month"),
+                 #        create_choice(
+                 #            name="Month",
+                 #            value="Month"),
+                 #        create_choice(
+                 #            name="Week",
+                 #            value="Week"),
+                 #        create_choice(
+                 #            name="All-Time",
+                 #            value="AT"),
+                 #        create_choice(
+                 #            name="Season",
+                 #            value="Season")
+                 #    ]
+                 #),
                  create_option(
                      name="show",
                      description="Look at TierData over-time.",
@@ -1365,7 +1347,7 @@ log.debug(f"{dfx}")
                         ]
                          )
              ])
-async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week", show="null", about="null"):
+async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null"):
     channelid = ctx.channel.id
     await ctx.send(f":bear: `Processing request...`")
     if channelid in optout:
@@ -1387,12 +1369,9 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
             elif about=="commands":
                 about_title = "Commands"
                 desc = "Command Options List:\
-                       \n\n`/tdh hero: YOUR-HERO-NAME` (required) - Show KDA/WR%/USE% for this Hero by MODE, REGION, and ELO \
-                       \n- `region:(NA,SA,SE,EU)`, default:`All` \
-                       \n- `mode:(Brawl,Classic,Rank)`, default: `All-Modes` \
-                       \n- `elo:(Normal,High,Very-High)`, default: `All-Levels` \
-                       \n- `period:(Month,Week,All-Time)`, default: `Week` \
-                       \n- `show:(History, Averages)` default: `none` - The view changes from a historical view of KDA,WR,or USE -or- a box chart view of averages"
+                       \n\n`/tdh hero: YOUR-HERO-NAME` (required) - Show BAN/WR%/USE% for this Hero by ELO \
+                       \n- `elo:(All,Legend+,Mythic 400+)`, default: `All` \
+                       \n- `show:(History, Averages)` default: `none` - The view changes from a historical view of BAN,WR,or USE -or- a box chart view of averages"
             # Declare Embed
             helpembed = discord.Embed(
                     title=f" About: {about_title}",
@@ -1431,9 +1410,9 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
 
                 # audit
                 user = ctx.author
-                # audit.info(f",{user},dd,{region},{mode},{elo},{period},{sort},{role},{view},{chartview},{about},{show},{shero}")
-                audit.info(f"{user},tdh,{region},{mode},{elo},{period},,,,,,{show},{hn}")
-                log.info(f"{user} used /tdh")
+                # audit.info(f",{user},td,{elo},{period},{sort},{role},{view},{chartview},{about},{show},{shero}")
+                audit.info(f"{user},ddh,{elo},{period},,,,,,{show},{hn}")
+                log.info(f"{user} used /ddh")
 
                 log.info(f"Looking for... {hn}")
                 hnl = hn.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()
@@ -1444,25 +1423,24 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                 portrait = heroicons.portrait[hnl]
 
                 ###### Transform filters:
-                r = region.replace("All", "all")
-                m = mode.replace("All", "All-Modes")
                 lvl = elo.replace("All", "All-Levels")
-                dt = period.replace("AT", "All-Time").replace("Week", "This Week").replace("Month", "This Month")
+                dt = period.replace("AT", "All-Time").replace("Week", "This Week").replace("Month", "This Month").replace("Day","Today")
 
                 #### COLOR DECORATION
-                if mode == "Rank":
-                    color = discord.Color.red()
-                elif mode == "Brawl":
-                    color = discord.Color.blue()
-                elif mode == "Classic":
-                    color = discord.Color.gold()
-                else:
+                if elo == "All":
                     color = discord.Color.teal()
+
+                elif elo == "Legend":
+                    color = discord.Color.gold()
+
+                elif elo == "Mythic":
+                    color = discord.Color.purple()
+
 
                 #### DECLARE EMBED ####
                 embed = discord.Embed(
                     title=f"TierData for {hn}",
-                    description=f"(Region:{region}, Mode:{mode}, Elo:{elo})",
+                    description=f"\n",
                     color=color)
 
                 embed.set_thumbnail(url=f"{portrait}")
@@ -1470,7 +1448,7 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                 #CHECK FOR HISTORY:
                 if show=="history":
                     #SHOW HISTORY CHART
-                    chart = f"{histpath}{r}/{m}/{lvl}/{hnl}.png"
+                    chart = f"{histpath}{lvl}/{hnl}.png"
 
                     if not os.path.exists(chart):
                         embed.add_field(name=f" {ico} Historical Summary:", value=f"`No Chart Available...`", inline=False)
@@ -1484,7 +1462,7 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                         await ctx.channel.send(embed=embed)
 
                     else:
-                        embed.add_field(name=f" {ico} Historical Summary:", value=f"Changes in Win%, Use%, KDA over Time.",
+                        embed.add_field(name=f" {ico} Historical Summary:", value=f"Changes in Win%, Use%, BAN over Time.",
                                     inline=False)
                         log.info(f"Reading Chart: {chart}")
                         file = discord.File(chart, filename=f"{hnl}.png")
@@ -1499,7 +1477,7 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                 # CHECK FOR HISTORY:
                 if show == "averages":
                     # SHOW AVERAGES CHART
-                    chart = f"{avgpath}{r}/{m}/{lvl}/{hnl}.png"
+                    chart = f"{avgpath}{lvl}/{hnl}.png"
 
                     if not os.path.exists(chart):
                         embed.add_field(name=f" {ico} Historical Summary:", value=f"`No Chart Available...`", inline=False)
@@ -1514,7 +1492,7 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
 
                     else:
                         embed.add_field(name=f" {ico} Statistical Summary:",
-                                        value=f"Averages in Win%, Use%, KDA over Time.",
+                                        value=f"Averages in Win%, Use%, BAN over Time.",
                                         inline=False)
                         log.info(f"Reading Chart: {chart}")
                         file = discord.File(chart, filename=f"{hnl}.png")
@@ -1534,81 +1512,63 @@ async def test(ctx, hero: str, region="All", mode="All", elo="All", period="Week
                     #SHOW ALL TABLES
                     #### Create Filters
                     nfilter = dfx.isin([hn]).any(axis=1)
-                    pfilter = dfx["period"].isin([period])
-                    rfilter = dfx["region"].isin([r])
-                    mfilter = dfx["mode"].isin([m])
                     efilter = dfx["elo"].isin([lvl])
 
-                    sumdf = dfx[nfilter & rfilter & pfilter & mfilter & efilter]
-                    sumdf = sumdf.reindex(columns=['region', 'elo', 'mode', 'win', 'use', 'kda'])
+                    sumdf = dfx[nfilter]
 
-                    #Check for outlier
-                    if (sumdf['kda'] > kdalim).any() or (sumdf['win'] == winlim).any() or (sumdf['use'] == uselim).any():
-                        outlier += 1
-                        log.info(f"We have an outlier.")
+                    sumdf = sumdf.reindex(columns=['-','elo', 'win', 'use', 'ban', 'wrank', 'urank', 'banrank'])
+
+                    #### Add Padding and FORMAT:
+                    sumdf['elo'] = ('`' + sumdf['elo'].str.center(6) + '`')
+                    sumdf['win'] = sumdf['win'].astype(str)
+                    sumdf['win'] = ('`' + sumdf['win'].str.center(5) + '`')
+                    sumdf['use'] = sumdf['use'].astype(str)
+                    sumdf['use'] = ('`' + sumdf['use'].str.center(5) + '`')
+                    sumdf['ban'] = sumdf['ban'].astype(str)
+                    sumdf['ban'] = ('`' + sumdf['ban'].str.center(5) + '`')
+                    sumdf['wrank'] = sumdf['wrank'].astype(str)
+                    sumdf['wrank'] = ('`' + sumdf['wrank'].str.center(3) + '`')
+                    sumdf['urank'] = sumdf['urank'].astype(str)
+                    sumdf['urank'] = ('`' + sumdf['urank'].str.center(3) + '`')
+                    sumdf['banrank'] = sumdf['banrank'].astype(str)
+                    sumdf['banrank'] = ('`' + sumdf['banrank'].str.center(3) + '`')
+
+                    # FORMAT COLUMN HEADER
+                    e = "ELO"
+                    e = e.center(6, " ")
+                    i = "-"
+                    i = i.center(2, " ")
+                    w = "WIN%"
+                    w = w.center(5, " ")
+                    u = "USE%"
+                    u = u.center(5, " ")
+                    k = "BAN%"
+                    k = k.center(5, " ")
+                    wr = "WIN"
+                    wr = wr.center(3, " ")
+                    ur = "USE"
+                    ur = ur.center(3, " ")
+                    br = "BAN"
+                    br = br.center(3, " ")
+                    sumdf.rename(columns={'-': i,'elo': e, 'win': w, 'use': u, 'ban': k,'wrank':wr, 'urank':ur, 'banrank':br}, inplace=True)
+                    sumdf.columns = sumdf.columns.astype(str)
+                    sumdf.columns = ('`' + sumdf.columns + '`')
+
+
+                    #print(sumdf)
 
                     if sumdf.empty:
                         sumdf = "No data available."
                     else:
-                        # replace outlier with xxx
-                        sumdf['kda'] = sumdf['kda'].mask(sumdf['kda'] > kdalim, "---")
-                        sumdf = sumdf.to_string(index=False)
-                    embed.add_field(name=f" {ico} Summary for: {dt})", value=f"`{sumdf}`", inline=False)
+                        table = sumdf.to_string(index=False)
+                    embed.add_field(name=f" {ico} Summary for: {dt})", value=f"{table}", inline=False)
 
-                    ## CREATE EMBED FIELDS:
-                    if r == "all":
-                        rdf = dfx[nfilter & pfilter & mfilter & efilter]
-                        rdf = rdf.reindex(columns=['region', 'elo', 'mode', 'win', 'use', 'kda'])
-                        rdf.sort_values('region', ascending=True)
-                        # Check for outlier
-                        if (rdf['kda'] > kdalim).any() or (rdf['win'] == winlim).any() or (rdf['use'] == uselim).any():
-                            outlier += 1
-                            log.info(f"We have an outlier.")
-                        if rdf.empty:
-                            rdf = "No data available."
-                        else:
-                            #outlier
-                            rdf['kda'] = rdf['kda'].mask(rdf['kda'] > kdalim, "---")
-                            rdf = rdf.to_string(index=False)
-                        embed.add_field(name=f"Sorted by Region:", value=f"`{rdf}`", inline=False)
-
-                    if m == "All-Modes":
-                        mdf = dfx[nfilter & pfilter & rfilter & efilter]
-                        mdf = mdf.reindex(columns=['mode', 'region', 'elo', 'win', 'use', 'kda'])
-                        mdf.sort_values('mode', ascending=True)
-                        # Check for outlier
-                        if (mdf['kda'] > kdalim).any() or (mdf['win'] == winlim).any() or (mdf['use'] == uselim).any():
-                            outlier += 1
-                            log.info(f"We have an outlier.")
-                        if mdf.empty:
-                            mdf = "No data available."
-                        else:
-                            #outlier
-                            mdf['kda'] = mdf['kda'].mask(mdf['kda'] > kdalim, "---")
-                            mdf = mdf.to_string(index=False)
-                        embed.add_field(name=f"Sorted by Modes:", value=f"`{mdf}`", inline=False)
-
-                    if lvl == "All-Levels":
-                        edf = dfx[nfilter & pfilter & rfilter & mfilter]
-                        edf = edf.reindex(columns=['elo', 'mode', 'region', 'win', 'use', 'kda'])
-                        edf.sort_values('elo', ascending=True)
-                        # Check for outlier
-                        if (edf['kda'] > kdalim).any() or (edf['win'] == winlim).any() or (edf['use'] == uselim).any():
-                            outlier += 1
-                            log.info(f"We have an outlier.")
-                        if edf.empty:
-                            edf = "No data available."
-                        else:
-                            #outlier
-                            edf['kda'] = edf['kda'].mask(edf['kda'] > kdalim, "---")
-                            edf = edf.to_string(index=False)
-                        embed.add_field(name=f"Sorted by Elo:", value=f"`{edf}`", inline=False)
 
                     # IF OUTLIER
                     if outlier >= 1:
                         embed.add_field(name=f":rotating_light: Outlier Notice:",
                                         value=f":bear: Teddy has detected a statistically improbable anomaly in the data you have requested."
-                                              f"\nTry using a filter such as `/tdh mode:Rank` to get more accurate results.",
+                                              f"\nTry using a filter such as `/tdh elo:Legend` to get more accurate results.",
                                         inline=False)
 
                     #### ADD EMBED FOR Foot
@@ -1658,7 +1618,7 @@ async def weeklysummary(ctx, channel: discord.TextChannel, reportnum):
     #check for report
     weeklyreport = f"{reportpath}/{reportnum}.png"
     if os.path.exists(weeklyreport):
-        summaryembed.add_field(name=f"Statistics for Region/Mode/Elo",
+        summaryembed.add_field(name=f"Weekly Tier Data Summary",
                                value=f"Please checkout the weekly summary powered by TEDDY! \
                                          Every week after the stats run, we summarize the findings and \
                                          produce this nifty infographic to demonstrate how players are performing! \
