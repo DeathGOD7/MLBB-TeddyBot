@@ -93,8 +93,8 @@ today = x.strftime("%Y%m%d")
 
 rawpath = "/tmp/RankData/"
 #rawpath = "/var/www/html/RankData/json/"
-histpath = "/var/www/html/timeline/summary/"
-avgpath = "/var/www/html/timeline/averages/"
+histpath = "/var/www/html/timeline/summary.rd/"
+avgpath = "/var/www/html/timeline/averages.rd/"
 chartpath = "/var/www/html/reports/"
 reportpath = "/var/www/html/summary-reports-png"
 
@@ -1423,7 +1423,7 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
                 portrait = heroicons.portrait[hnl]
 
                 ###### Transform filters:
-                lvl = elo.replace("All", "All-Levels")
+
                 dt = period.replace("AT", "All-Time").replace("Week", "This Week").replace("Month", "This Month").replace("Day","Today")
 
                 #### COLOR DECORATION
@@ -1462,7 +1462,7 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
                         await ctx.channel.send(embed=embed)
 
                     else:
-                        embed.add_field(name=f" {ico} Historical Summary:", value=f"Changes in Win%, Use%, BAN over Time.",
+                        embed.add_field(name=f" {ico} Historical Summary:", value=f"Changes in Win%, Use%, Ban% over Time.",
                                     inline=False)
                         log.info(f"Reading Chart: {chart}")
                         file = discord.File(chart, filename=f"{hnl}.png")
@@ -1477,7 +1477,7 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
                 # CHECK FOR HISTORY:
                 if show == "averages":
                     # SHOW AVERAGES CHART
-                    chart = f"{avgpath}{lvl}/{hnl}.png"
+                    chart = f"{avgpath}{elo}/{hnl}.png"
 
                     if not os.path.exists(chart):
                         embed.add_field(name=f" {ico} Historical Summary:", value=f"`No Chart Available...`", inline=False)
@@ -1492,7 +1492,7 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
 
                     else:
                         embed.add_field(name=f" {ico} Statistical Summary:",
-                                        value=f"Averages in Win%, Use%, BAN over Time.",
+                                        value=f"Averages in Win%, Use%, Ban% over Time.",
                                         inline=False)
                         log.info(f"Reading Chart: {chart}")
                         file = discord.File(chart, filename=f"{hnl}.png")
