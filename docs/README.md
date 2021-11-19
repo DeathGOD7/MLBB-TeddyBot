@@ -65,4 +65,4 @@
   - Example:<br><img src=""> 
 
 ## Updated Data Flow (v2.2+)
-<img src="">
+<img src="https://github.com/p3hndrx/MLBB-TeddyBot/blob/main.rd/docs/img/TEDDY-3.0-TEDDY-BetaRC.drawio.png?raw=true">
