@@ -63,7 +63,7 @@ audit = logging.getLogger('audit')
   #add CSV header if doesn't exist
 if header ==1:
     log.info(f"Writing HEADER to audit log: {auditpath}")
-    head = "Timestamp,User,Command,Region,Mode,Elo,Period,Sort,Role,View,ChartView,About,Show,HeroName"
+    head = "Timestamp,User,Command,Elo,Period,Sort,Role,View,ChartView,About,Show,HeroName"
     f = open(auditpath, 'w')
     f.write(f'{head}\n')
     f.close()
@@ -72,7 +72,7 @@ else:
 # endregion
 
 # region VERSION
-version = "BETA Release Candidate Ver.03.01 (20211117)"
+version = "BETA Release Candidate Ver.03.02 (20211120)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -241,23 +241,23 @@ slash = SlashCommand(bot, sync_commands=True)
                      required=False,
                      choices=[
                          create_choice(
-                            name="Elo x WIN",
-                             value="eloxwin"),
+                            name="TOP x WIN",
+                             value="topxwin"),
                          create_choice(
-                             name="Elo x BAN",
-                             value="eloxban"),
+                             name="TOP x BAN",
+                             value="topxban"),
                          create_choice(
-                             name="Elo x USE",
-                             value="eloxuse"),
+                             name="TOP x USE",
+                             value="topxuse"),
                          create_choice(
-                             name="Elo x WIN (box)",
-                             value="eloxwinbox"),
+                             name="TOP x WIN (box)",
+                             value="topxwinbox"),
                          create_choice(
-                             name="Elo x BAN (box)",
-                             value="eloxbanbox"),
+                             name="TOP x BAN (box)",
+                             value="topxbanbox"),
                          create_choice(
-                             name="Elo x USE (box)",
-                             value="eloxusebox")
+                             name="TOP x USE (box)",
+                             value="topxusebox")
                      ]
                  ),
                  create_option(
@@ -379,35 +379,35 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                         
 
                         #region Elo Conditions
-                        if chartview=="eloxwin":
-                            requestchart = "Elo X Win"
+                        if chartview=="topxwin":
+                            requestchart = "Top X Win"
                             filename = f"{elo}.win.png"
                             charttype = "baseXall.rd"
 
-                        elif chartview=="eloxban":
-                            requestchart = "Elo X BAN"
+                        elif chartview=="topxban":
+                            requestchart = "Top X BAN"
                             filename = f"{elo}.ban.png"
                             charttype = "baseXall.rd"
 
-                        elif chartview=="eloxuse":
-                            requestchart = "Elo X USE"
+                        elif chartview=="topxuse":
+                            requestchart = "Top X USE"
                             filename = f"{elo}.use.png"
                             charttype = "baseXall.rd"
 
-                        elif chartview=="eloxwinbox":
-                            requestchart = "Elo X Win (box)"
+                        elif chartview=="topxwinbox":
+                            requestchart = "Top X Win (box)"
                             filename = f"{elo}.win.png"
                             charttype = "baseXall-box.rd"
                             box=1
 
-                        elif chartview=="eloxbanbox":
-                            requestchart = "Elo X BAN (box)"
+                        elif chartview=="topxbanbox":
+                            requestchart = "Top X BAN (box)"
                             filename = f"{elo}.ban.png"
                             charttype = "baseXall-box.rd"
                             box=1
 
-                        elif chartview=="eloxusebox":
-                            requestchart = "Elo X USE (box)"
+                        elif chartview=="topxusebox":
+                            requestchart = "Top X USE (box)"
                             filename = f"{elo}.use.png"
                             charttype = "baseXall-box.rd"
                             box=1
@@ -447,40 +447,40 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                         md = elo.replace("All", "All-Elo")
                         role = role.capitalize()
 
-                        if chartview == "eloxwin":
-                            requestchart = "Elo X Win"
+                        if chartview == "topxwin":
+                            requestchart = "Top X Win"
                             filename = f"{role}.win.png"
                             charttype = "baseXrole.rd"
 
-                        elif chartview == "eloxban":
-                            requestchart = "Elo X BAN"
+                        elif chartview == "topxban":
+                            requestchart = "Top X BAN"
                             filename = f"{role}.ban.png"
                             charttype = "baseXrole.rd"
 
-                        elif chartview == "eloxuse":
-                            requestchart = "Elo X USE"
+                        elif chartview == "topxuse":
+                            requestchart = "Top X USE"
                             filename = f"{role}.use.png"
                             charttype = "baseXrole.rd"
 
-                        elif chartview == "eloxwinbox":
-                            requestchart = "Elo X Win (box)"
+                        elif chartview == "topxwinbox":
+                            requestchart = "Top X Win (box)"
                             filename = f"{role}.win.png"
                             charttype = "baseXrole-box.rd"
                             box = 1
 
-                        elif chartview == "eloxbanbox":
-                            requestchart = "Elo X BAN (box)"
+                        elif chartview == "topxbanbox":
+                            requestchart = "Top X BAN (box)"
                             filename = f"{role}.ban.png"
                             charttype = "baseXrole-box.rd"
                             box = 1
 
-                        elif chartview == "eloxusebox":
-                            requestchart = "Elo X USE (box)"
+                        elif chartview == "topxusebox":
+                            requestchart = "Top X USE (box)"
                             filename = f"{role}.use.png"
                             charttype = "baseXrole-box.rd"
                             box = 1
 
-                        chart = f"{chartpath}{charttype}/{lvl}/{filename}"
+                        chart = f"{chartpath}{charttype}/{elo}/{filename}"
 
                             # Check to see if chart exists
                         if not os.path.exists(chart):
@@ -1410,8 +1410,8 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
 
                 # audit
                 user = ctx.author
-                # audit.info(f",{user},td,{elo},{period},{sort},{role},{view},{chartview},{about},{show},{shero}")
-                audit.info(f"{user},ddh,{elo},{period},,,,,,{show},{hn}")
+                # audit.info(f",{user},dd,{elo},{period},{sort},{role},{view},{chartview},{about},{show},{shero}")
+                audit.info(f"{user},tdh,{elo},{period},,,,,,{show},{hn}")
                 log.info(f"{user} used /ddh")
 
                 log.info(f"Looking for... {hn}")
@@ -1448,7 +1448,7 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
                 #CHECK FOR HISTORY:
                 if show=="history":
                     #SHOW HISTORY CHART
-                    chart = f"{histpath}{lvl}/{hnl}.png"
+                    chart = f"{histpath}{elo}/{hnl}.png"
 
                     if not os.path.exists(chart):
                         embed.add_field(name=f" {ico} Historical Summary:", value=f"`No Chart Available...`", inline=False)
