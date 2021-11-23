@@ -20,6 +20,9 @@ import heroes
 import heroicons
 import laning
 
+from functions import grabtierdata
+from functions import grabsummarydata
+
 import logging
 # endregion
 
@@ -72,7 +75,7 @@ else:
 # endregion
 
 # region VERSION
-version = "BETA Release Candidate Ver.03.02 (20211120)"
+version = "BETA Release Candidate Ver.03.025 (20211123)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -91,8 +94,8 @@ summaryroles = ['MLBB Official','DEV','Discord Bot Developer','Lead Moderator']
 x = datetime.datetime.now()
 today = x.strftime("%Y%m%d")
 
-rawpath = "/tmp/RankData/"
-#rawpath = "/var/www/html/RankData/json/"
+#rawpath = "/tmp/RankData/"
+rawpath = "/var/www/html/RankData/"
 histpath = "/var/www/html/timeline/summary.rd/"
 avgpath = "/var/www/html/timeline/averages.rd/"
 chartpath = "/var/www/html/reports/"
@@ -108,11 +111,12 @@ lanes = ["gold","exp","mid","jungle","roam"]
 runtimes = os.listdir(rawpath)
 runtimes = sorted(runtimes, reverse=True)
 latest_run = max(d for d in runtimes)
-latest_run = os.path.join(rawpath, latest_run)
-print(latest_run)
+latest = os.path.join(rawpath, latest_run)
+print(latest)
 
-previous_run = min(runtimes[0],runtimes[1])
-previous_run = os.path.join(rawpath, previous_run)
+#build averages master table
+summarycsv = f'{chartpath}csv/rd.averages.master.csv'
+sumdf = grabsummarydata(summarycsv)
 
 ##### DISCORD LISTENERS #######
 
@@ -142,29 +146,23 @@ slash = SlashCommand(bot, sync_commands=True)
                              value="Mythic")
                      ]
                  ),
-                 #create_option(
-                 #    name="period",
-                 #    description="Look at TierData for the previous time-period.",
-                 #    option_type=3,
-                 #    required=False,
-                 #    choices=[
-                 #        create_choice(
-                 #            name="Day",
-                 #            value="Day"),
-                 #        create_choice(
-                 #            name="Week",
-                 #            value="Week"),
-                 #        create_choice(
-                 #            name="Month",
-                 #            value="Month"),
-                 #        create_choice(
-                 #            name="All-Time",
-                 #            value="All-Time"),
-                 #        create_choice(
-                 #            name="Season",
-                 #            value="Season"),
-                 #    ]
-                 #),
+                 create_option(
+                     name="period",
+                     description="Look at TierData averages for the previous time-period.",
+                     option_type=3,
+                     required=False,
+                     choices=[
+                         create_choice(
+                             name="Week",
+                             value="Week"),
+                         create_choice(
+                             name="Month",
+                             value="Month"),
+                         create_choice(
+                             name="3-Months",
+                             value="Season"),
+                     ]
+                 ),
                  create_option(
                      name="sort",
                      description="Look at Top Values or Bottom Values.",
@@ -338,18 +336,17 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
 
             await ctx.channel.send(embed=helpembed)
         else:
-            if os.path.isdir(latest_run):  # check for raw data path
+            if os.path.isdir(latest):  # check for raw data path
                 ##### START JSON SCRAPER ######
                 #### Transform Arguments
 
-                dt = period.replace("Day", "Today").replace("Week", "This Week").replace("Month", "This Month").replace("Season", "This Season")
+                dt = period.replace("Day", "Today").replace("Week", "Past 7 Days").replace("Month", "Past 30 Days").replace("Season", "Past 90 Days")
 
                 #### FIND FILE
-                jsonfile = f'{latest_run}/{elo}.json'
+                jsonfile = f'{latest}/{elo}.json'
                 if os.path.exists(jsonfile):
-                    log.info("Requesting: " + jsonfile)
 
-                    runtime = latest_run.replace(rawpath, "")
+                    runtime = latest.replace(rawpath, "")
 
                     #### COLOR DECORATION and THUMBNAIL####
                     if elo == "All":
@@ -372,7 +369,7 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                     embed.set_thumbnail(url=ico)
 
 #CHART VIEWS
-    #CHART VIEW TYPE 1: MODE
+    #CHART VIEW TYPE 1: All ROLES
                     if chartview!="null" and role=="null":
                         view = "null"
                         box = 0
@@ -521,295 +518,290 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                             ######## SHOW VIEW OPTIONS#
                             if view == "delta":
                                 log.info(f"Request Delta View")
-                                embed.add_field(name=f"Delta View", value=f"These tables represent the most dramatic changes for each of the criteria from the last time the stats were synchronized.\
-                                                                          Sorted by the change in table rank, including the change in value.\n\n", inline=False)
 
-                                # Check for Previous Files
-                                pjsonfile = f'{previous_run}/{elo}.json'
-                                if os.path.isdir(previous_run) and os.path.exists(pjsonfile):
-                                    log.info("Requesting: " + pjsonfile)
-                                    pruntime = previous_run.replace(rawpath, "")
+                                indexmissing = 0
+                                if period == "Day":
+                                    try:
+                                        previous_run = min(runtimes[0], runtimes[1])
+                                    except IndexError:
+                                        indexmissing = 1
+                                elif period == "Week":
+                                    try:
+                                        previous_run = min(runtimes[0], runtimes[7])
+                                    except IndexError:
+                                        indexmissing = 1
+                                elif period == "Month":
+                                    try:
+                                        previous_run = min(runtimes[0], runtimes[30])
+                                    except IndexError:
+                                        indexmissing = 1
+                                elif period == "Season":
+                                    try:
+                                        previous_run = min(runtimes[0], runtimes[90])
+                                    except IndexError:
+                                        indexmissing = 1
 
-                                    # Load previous file
-                                    with open(pjsonfile) as pj:
-                                        pdata = json.load(pj)
+                                if indexmissing == 0:
+                                    previous = os.path.join(rawpath, previous_run)
+                                    embed.add_field(name=f"Delta View for: {previous_run} > {latest_run}", value=f"These tables represent the most dramatic changes for each of the criteria from the last time the stats were synchronized.\
+                                                                              Sorted by the change in table rank, including the change in value.\n\n", inline=False)
 
-                                        pdf = json_normalize(pdata, ['data', 'data'])
+                                    log.info(f"Delta Compare: {period} {previous}")
 
-                                        #region CREATE PREVIOUS TABLE
-                                        # convert from strings:
-                                        pdf['win'] = list(map(lambda x: x[:-1], pdf['win'].values))
-                                        pdf['use'] = list(map(lambda x: x[:-1], pdf['use'].values))
-                                        pdf['ban'] = list(map(lambda x: x[:-1], pdf['ban'].values))
+                                    # Check for Previous Files
+                                    pjsonfile = f'{previous}/{elo}.json'
+                                    if os.path.isdir(previous) and os.path.exists(pjsonfile):
+                                        log.info("Requesting: " + jsonfile)
+                                        log.info("Requesting: " + pjsonfile)
+                                        pruntime = previous_run.replace(rawpath, "")
 
-                                        pdf['win'] = [float(x) for x in pdf['win'].values]
-                                        pdf['use'] = [float(x) for x in pdf['use'].values]
-                                        pdf['ban'] = [float(x) for x in pdf['ban'].values]
+                                        # Load previous file
+                                        with open(pjsonfile) as pj:
+                                            pdata = json.load(pj)
 
-                                        # add ranking column
-                                        pdf = pdf.sort_values(by=['use'], ascending=False)
-                                        pdf['urank'] = range(1, len(pdf) + 1)
-                                        pdf = pdf.sort_values(by=['win'], ascending=False)
-                                        pdf['wrank'] = range(1, len(pdf) + 1)
-                                        pdf = pdf.sort_values(by=['ban'], ascending=False)
-                                        pdf['banrank'] = range(1, len(pdf) + 1)
-                                        #endregion
-                                        #print(f"Previous Table:\n {pdf}")
+                                            # build table
+                                            pdf = grabtierdata(pdata)
 
+                                            # build table
+                                            df = grabtierdata(data)
 
-                                        df = json_normalize(data, ['data', 'data'])
+                                            # MERGE CURRENT WITH PREVIOUS
+                                            df = df.merge(pdf, how='left', on='name')
 
-                                        # region CREATE CURRENT TABLE
-                                        # convert from strings:
-                                        df['win'] = list(map(lambda x: x[:-1], df['win'].values))
-                                        df['use'] = list(map(lambda x: x[:-1], df['use'].values))
-                                        df['ban'] = list(map(lambda x: x[:-1], df['ban'].values))
+                                            # region DataFrame Calculations
 
-                                        df['win'] = [float(x) for x in df['win'].values]
-                                        df['use'] = [float(x) for x in df['use'].values]
-                                        df['ban'] = [float(x) for x in df['ban'].values]
+                                            # CALCULATE DELTAS
+                                            df['urank_d'] = df['urank_x'] - df['urank_y']
+                                            df['wrank_d'] = df['wrank_x'] - df['wrank_y']
+                                            df['banrank_d'] = df['banrank_x'] - df['banrank_y']
 
-                                        # add ranking column
-                                        df = df.sort_values(by=['use'], ascending=False)
-                                        df['urank'] = range(1, len(df) + 1)
-                                        df = df.sort_values(by=['win'], ascending=False)
-                                        df['wrank'] = range(1, len(df) + 1)
-                                        df = df.sort_values(by=['ban'], ascending=False)
-                                        df['banrank'] = range(1, len(df) + 1)
-                                        # endregion
+                                            df['win_d'] = df['win_x'] - df['win_y']
+                                            df['use_d'] = df['use_x'] - df['use_y']
+                                            df['ban_d'] = df['ban_x'] - df['ban_y']
 
-                                        # MERGE CURRENT WITH PREVIOUS
-                                        df = df.merge(pdf, how='left', on='name')
+                                            df['win_d'] = df['win_d'].round(2)
+                                            df['use_d'] = df['use_d'].round(2)
+                                            df['ban_d'] = df['ban_d'].round(2)
+                                            # endregion
+                                            #print(f"Merged Table:\n {df}")
 
-                                        # region DataFrame Calculations
+                                            #region ColumnHeader Mappings
 
-                                        # CALCULATE DELTAS
-                                        df['urank_d'] = df['urank_x'] - df['urank_y']
-                                        df['wrank_d'] = df['wrank_x'] - df['wrank_y']
-                                        df['banrank_d'] = df['banrank_x'] - df['banrank_y']
+                                            r = "RATING"
+                                            r = r.center(9, " ")
+                                            rd = "R▲"
+                                            rd = rd.center(6, " ")
+                                            i = "-"
+                                            i = i.center(2, " ")
+                                            n = "NAME"
+                                            n = n.center(13, " ")
+                                            w = "WIN"
+                                            w = w.center(6, " ")
+                                            u = "USE"
+                                            u = u.center(6, " ")
+                                            k = "BAN"
+                                            k = k.center(6, " ")
 
-                                        df['win_d'] = df['win_y'] - df['win_x']
-                                        df['use_d'] = df['use_y'] - df['use_x']
-                                        df['ban_d'] = df['ban_x'] - df['ban_y']
+                                            wd = "WIN▲"
+                                            wd = wd.center(6, " ")
+                                            ud = "USE▲"
+                                            ud = ud.center(6, " ")
+                                            kd = "BAN▲"
+                                            kd = kd.center(6, " ")
 
-                                        df['win_d'] = df['win_d'].round(2)
-                                        df['use_d'] = df['use_d'].round(2)
-                                        df['ban_d'] = df['ban_d'].round(2)
-                                        # endregion
-                                        #print(f"Merged Table:\n {df}")
+                                            # print (df.columns)
+                                            #endregion
 
-                                        #region ColumnHeader Mappings
+                                            for crit in dsort_by:
+                                                report = "\n"
 
-                                        r = "RATING"
-                                        r = r.center(9, " ")
-                                        rd = "R▲"
-                                        rd = rd.center(6, " ")
-                                        i = "-"
-                                        i = i.center(2, " ")
-                                        n = "NAME"
-                                        n = n.center(13, " ")
-                                        w = "WIN"
-                                        w = w.center(6, " ")
-                                        u = "USE"
-                                        u = u.center(6, " ")
-                                        k = "BAN"
-                                        k = k.center(6, " ")
+                                                # filter by role
+                                                if role != "null":
+                                                    rslt = getattr(roles, role)
+                                                    # print(rslt)
+                                                    df = df[df['name'].isin(rslt)]
 
-                                        wd = "WIN▲"
-                                        wd = wd.center(6, " ")
-                                        ud = "USE▲"
-                                        ud = ud.center(6, " ")
-                                        kd = "BAN▲"
-                                        kd = kd.center(6, " ")
+                                                    if role == 'support':
+                                                        imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/f/ff/Support_Icon.png'
+                                                    elif role == 'mage':
+                                                        imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/5/53/Mage_Icon.png'
+                                                    elif role == 'marksman':
+                                                        imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/1/10/Marksman_Icon.png'
+                                                    elif role == 'assassin':
+                                                        imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/3/3f/Assassin_Icon.png'
+                                                    elif role == 'tank':
+                                                        imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/f/f0/Tank_Icon.png'
+                                                    elif role == 'fighter':
+                                                        imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/1/1a/Fighter_Icon.png'
 
-                                        # print (df.columns)
-                                        #endregion
+                                                    embed.set_author(name=f"Filter by {role.upper()}", icon_url=imgurl)
 
-                                        for crit in dsort_by:
-                                            report = "\n"
+                                                    # sort
+                                                if sort == "Top":
+                                                    dfs = df.sort_values(str(crit), ascending=False).head(5)
+                                                    #print(f"sorted by: {crit}:\n{df}")
+                                                else:
+                                                    dfs = df.sort_values(str(crit), ascending=False).tail(5)
 
-                                            # filter by role
-                                            if role != "null":
-                                                rslt = getattr(roles, role)
-                                                # print(rslt)
-                                                df = df[df['name'].isin(rslt)]
+                                                #### Add Icon Column
+                                                dfs['o'] = dfs['name'].str.lower()
+                                                dfs['o'] = dfs['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
+                                                dfs['-'] = dfs['o'].map(mojimap.moji)
+                                                del dfs['o']
+                                                #print(f"Current Table:\n {dfs}")
 
-                                                if role == 'support':
-                                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/f/ff/Support_Icon.png'
-                                                elif role == 'mage':
-                                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/5/53/Mage_Icon.png'
-                                                elif role == 'marksman':
-                                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/1/10/Marksman_Icon.png'
-                                                elif role == 'assassin':
-                                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/3/3f/Assassin_Icon.png'
-                                                elif role == 'tank':
-                                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/f/f0/Tank_Icon.png'
-                                                elif role == 'fighter':
-                                                    imgurl = 'https://static.wikia.nocookie.net/mobile-legends/images/1/1a/Fighter_Icon.png'
-
-                                                embed.set_author(name=f"Filter by {role.upper()}", icon_url=imgurl)
-
-                                                # sort
-                                            if sort == "Top":
-                                                dfs = df.sort_values(str(crit), ascending=False).head(5)
-                                                #print(f"sorted by: {crit}:\n{df}")
-                                            else:
-                                                dfs = df.sort_values(str(crit), ascending=False).tail(5)
-
-                                            #### Add Icon Column
-                                            dfs['o'] = dfs['name'].str.lower()
-                                            dfs['o'] = dfs['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
-                                            dfs['-'] = dfs['o'].map(mojimap.moji)
-                                            del dfs['o']
-                                            #print(f"Current Table:\n {dfs}")
-
-                                            #### Add Padding and FORMAT:
+                                                #### Add Padding and FORMAT:
 
 
-                                            #Rebuild Tables
-                                            if crit == "wrank_d":
-                                                title = "WR+/-"
-                                                dfd = dfs.reindex(columns=[str(crit), '-', 'name','wrank_x','wrank_y','win_x', 'win_d'])
-                                                #print(f"Pre-Table for {crit}:\n {dfd}")
+                                                #Rebuild Tables
+                                                if crit == "wrank_d":
+                                                    title = "WR+/-"
+                                                    dfd = dfs.reindex(columns=[str(crit), '-', 'name','wrank_x','wrank_y','win_x', 'win_d'])
+                                                    #print(f"Pre-Table for {crit}:\n {dfd}")
 
-                                                #concat & format field
-                                                dfd['wrank_d'] = dfd['wrank_d'].mask(dfd['wrank_d'] >= 0, ("+"+dfd['wrank_d'].astype(str)))
-                                                dfd['wrank'] = dfd['wrank_x'].astype(str)+" > "+ dfd['wrank_y'].astype(str)
-                                                dfd['win_d'] = dfd['win_d'].mask(dfd['win_d'] >= 0,("+" + dfd['win_d'].astype(str)))
+                                                    #concat & format field
+                                                    dfd['wrank_d'] = dfd['wrank_d'].mask(dfd['wrank_d'] >= 0, ("+"+dfd['wrank_d'].astype(str)))
+                                                    dfd['wrank'] = dfd['wrank_x'].astype(str)+" > "+ dfd['wrank_y'].astype(str)
+                                                    dfd['win_d'] = dfd['win_d'].mask(dfd['win_d'] >= 0,("+" + dfd['win_d'].astype(str)))
 
-                                                #drop & reorder
-                                                cols = ['wrank_d', 'wrank', '-', 'name', 'win_x', 'win_d']
-                                                dfd = dfd[cols]
+                                                    #drop & reorder
+                                                    cols = ['wrank_d', 'wrank', '-', 'name', 'win_x', 'win_d']
+                                                    dfd = dfd[cols]
 
-                                                #add padding:
-                                                dfd['wrank'] = ('`' + dfd['wrank'].str.center(9) + '`')
-                                                dfd['wrank_d'] = dfd['wrank_d'].astype(str)
-                                                dfd['wrank_d'] = ('`' + dfd['wrank_d'].str.center(6) + '`')
-                                                dfd['name'] = ('`' + dfd['name'].str.center(13) + '`')
-                                                dfd['win_x'] = dfd['win_x'].astype(str)
-                                                dfd['win_x'] = ('`' + dfd['win_x'].str.center(6) + '`')
-                                                dfd['win_d'] = dfd['win_d'].astype(str)
-                                                dfd['win_d'] = ('`' + dfd['win_d'].str.center(6) + '`')
+                                                    #add padding:
+                                                    dfd['wrank'] = ('`' + dfd['wrank'].str.center(9) + '`')
+                                                    dfd['wrank_d'] = dfd['wrank_d'].astype(str)
+                                                    dfd['wrank_d'] = ('`' + dfd['wrank_d'].str.center(6) + '`')
+                                                    dfd['name'] = ('`' + dfd['name'].str.center(13) + '`')
+                                                    dfd['win_x'] = dfd['win_x'].astype(str)
+                                                    dfd['win_x'] = ('`' + dfd['win_x'].str.center(6) + '`')
+                                                    dfd['win_d'] = dfd['win_d'].astype(str)
+                                                    dfd['win_d'] = ('`' + dfd['win_d'].str.center(6) + '`')
 
-                                                #format header:
-                                                dfd.rename(columns={'wrank_d': rd, 'wrank': r, '-': i, 'name': n, 'win_x': w, 'win_d':wd}, inplace=True)
-                                                dfd.columns = dfd.columns.astype(str)
-                                                dfd.columns = ('`' + dfd.columns + '`')
+                                                    #format header:
+                                                    dfd.rename(columns={'wrank_d': rd, 'wrank': r, '-': i, 'name': n, 'win_x': w, 'win_d':wd}, inplace=True)
+                                                    dfd.columns = dfd.columns.astype(str)
+                                                    dfd.columns = ('`' + dfd.columns + '`')
 
-                                            elif crit == "banrank_d":
-                                                title = "BAN+/-"
-                                                dfd = dfs.reindex(columns=[str(crit), '-', 'name','banrank_x','banrank_y','ban_x', 'ban_d'])
-                                                #print(f"Pre-Table for {crit}:\n {dfd}")
+                                                elif crit == "banrank_d":
+                                                    title = "BAN+/-"
+                                                    dfd = dfs.reindex(columns=[str(crit), '-', 'name','banrank_x','banrank_y','ban_x', 'ban_d'])
+                                                    #print(f"Pre-Table for {crit}:\n {dfd}")
 
-                                                # concat & format field
-                                                dfd['banrank_d'] = dfd['banrank_d'].mask(dfd['banrank_d'] >= 0, ("+" + dfd['banrank_d'].astype(str)))
-                                                dfd['banrank'] = dfd['banrank_x'].astype(str) + " > " + dfd['banrank_y'].astype(str)
-                                                dfd['ban_d'] = dfd['ban_d'].mask(dfd['ban_d'] >= 0,("+" + dfd['ban_d'].astype(str)))
+                                                    # concat & format field
+                                                    dfd['banrank_d'] = dfd['banrank_d'].mask(dfd['banrank_d'] >= 0, ("+" + dfd['banrank_d'].astype(str)))
+                                                    dfd['banrank'] = dfd['banrank_x'].astype(str) + " > " + dfd['banrank_y'].astype(str)
+                                                    dfd['ban_d'] = dfd['ban_d'].mask(dfd['ban_d'] >= 0,("+" + dfd['ban_d'].astype(str)))
 
 
-                                                cols = ['banrank_d', 'banrank', '-', 'name', 'ban_x', 'ban_d']
-                                                dfd = dfd[cols]
+                                                    cols = ['banrank_d', 'banrank', '-', 'name', 'ban_x', 'ban_d']
+                                                    dfd = dfd[cols]
 
-                                                # add padding:
-                                                dfd['banrank'] = ('`' + dfd['banrank'].str.center(9) + '`')
-                                                dfd['banrank_d'] = dfd['banrank_d'].astype(str)
-                                                dfd['banrank_d'] = ('`' + dfd['banrank_d'].str.center(6) + '`')
-                                                dfd['name'] = ('`' + dfd['name'].str.center(13) + '`')
-                                                dfd['ban_x'] = dfd['ban_x'].astype(str)
-                                                dfd['ban_x'] = ('`' + dfd['ban_x'].str.center(6) + '`')
-                                                dfd['ban_d'] = dfd['ban_d'].astype(str)
-                                                dfd['ban_d'] = ('`' + dfd['ban_d'].str.center(6) + '`')
+                                                    # add padding:
+                                                    dfd['banrank'] = ('`' + dfd['banrank'].str.center(9) + '`')
+                                                    dfd['banrank_d'] = dfd['banrank_d'].astype(str)
+                                                    dfd['banrank_d'] = ('`' + dfd['banrank_d'].str.center(6) + '`')
+                                                    dfd['name'] = ('`' + dfd['name'].str.center(13) + '`')
+                                                    dfd['ban_x'] = dfd['ban_x'].astype(str)
+                                                    dfd['ban_x'] = ('`' + dfd['ban_x'].str.center(6) + '`')
+                                                    dfd['ban_d'] = dfd['ban_d'].astype(str)
+                                                    dfd['ban_d'] = ('`' + dfd['ban_d'].str.center(6) + '`')
 
-                                                # format header:
-                                                dfd.rename(columns={'banrank_d': rd, 'banrank': r, '-': i, 'name': n, 'ban_x': k,'ban_d': kd}, inplace=True)
-                                                dfd.columns = dfd.columns.astype(str)
-                                                dfd.columns = ('`' + dfd.columns + '`')
+                                                    # format header:
+                                                    dfd.rename(columns={'banrank_d': rd, 'banrank': r, '-': i, 'name': n, 'ban_x': k,'ban_d': kd}, inplace=True)
+                                                    dfd.columns = dfd.columns.astype(str)
+                                                    dfd.columns = ('`' + dfd.columns + '`')
 
-                                            elif crit == "urank_d":
-                                                title = "Use+/-"
-                                                dfd = dfs.reindex(columns=[str(crit), '-', 'name','urank_x','urank_y','use_x', 'use_d'])
-                                                #print(f"Pre-Table for {crit}:\n {dfd}")
+                                                elif crit == "urank_d":
+                                                    title = "Use+/-"
+                                                    dfd = dfs.reindex(columns=[str(crit), '-', 'name','urank_x','urank_y','use_x', 'use_d'])
+                                                    #print(f"Pre-Table for {crit}:\n {dfd}")
 
-                                                # concat & format field
-                                                dfd['urank_d'] = dfd['urank_d'].mask(dfd['urank_d'] >= 0,("+" + dfd['urank_d'].astype(str)))
-                                                dfd['urank'] = dfd['urank_x'].astype(str) + " > " + dfd['urank_y'].astype(str)
-                                                dfd['use_d'] = dfd['use_d'].mask(dfd['use_d'] >= 0,("+" + dfd['use_d'].astype(str)))
+                                                    # concat & format field
+                                                    dfd['urank_d'] = dfd['urank_d'].mask(dfd['urank_d'] >= 0,("+" + dfd['urank_d'].astype(str)))
+                                                    dfd['urank'] = dfd['urank_x'].astype(str) + " > " + dfd['urank_y'].astype(str)
+                                                    dfd['use_d'] = dfd['use_d'].mask(dfd['use_d'] >= 0,("+" + dfd['use_d'].astype(str)))
 
-                                                # drop & reorder
-                                                cols = ['urank_d', 'urank', '-', 'name', 'use_x', 'use_d']
-                                                dfd = dfd[cols]
+                                                    # drop & reorder
+                                                    cols = ['urank_d', 'urank', '-', 'name', 'use_x', 'use_d']
+                                                    dfd = dfd[cols]
 
-                                                # add padding:
-                                                dfd['urank'] = ('`' + dfd['urank'].str.center(9) + '`')
-                                                dfd['urank_d'] = dfd['urank_d'].astype(str)
-                                                dfd['urank_d'] = ('`' + dfd['urank_d'].str.center(6) + '`')
-                                                dfd['name'] = ('`' + dfd['name'].str.center(13) + '`')
-                                                dfd['use_x'] = dfd['use_x'].astype(str)
-                                                dfd['use_x'] = ('`' + dfd['use_x'].str.center(6) + '`')
-                                                dfd['use_d'] = dfd['use_d'].astype(str)
-                                                dfd['use_d'] = ('`' + dfd['use_d'].str.center(6) + '`')
+                                                    # add padding:
+                                                    dfd['urank'] = ('`' + dfd['urank'].str.center(9) + '`')
+                                                    dfd['urank_d'] = dfd['urank_d'].astype(str)
+                                                    dfd['urank_d'] = ('`' + dfd['urank_d'].str.center(6) + '`')
+                                                    dfd['name'] = ('`' + dfd['name'].str.center(13) + '`')
+                                                    dfd['use_x'] = dfd['use_x'].astype(str)
+                                                    dfd['use_x'] = ('`' + dfd['use_x'].str.center(6) + '`')
+                                                    dfd['use_d'] = dfd['use_d'].astype(str)
+                                                    dfd['use_d'] = ('`' + dfd['use_d'].str.center(6) + '`')
 
-                                                # format header:
-                                                dfd.rename(columns={'urank_d': rd, 'urank': r, '-': i, 'name': n,'use_x': u, 'use_d': ud}, inplace=True)
-                                                dfd.columns = dfd.columns.astype(str)
-                                                dfd.columns = ('`' + dfd.columns + '`')
+                                                    # format header:
+                                                    dfd.rename(columns={'urank_d': rd, 'urank': r, '-': i, 'name': n,'use_x': u, 'use_d': ud}, inplace=True)
+                                                    dfd.columns = dfd.columns.astype(str)
+                                                    dfd.columns = ('`' + dfd.columns + '`')
 
-                                            #print(f"Rebuilt Table for {crit}:\n {dfd}")
+                                                #print(f"Rebuilt Table for {crit}:\n {dfd}")
 
-                                            # OUTPUT TO TABLE
-                                            table = dfd.to_string(index=False)
+                                                # OUTPUT TO TABLE
+                                                table = dfd.to_string(index=False)
 
-                                            # print(table)
-                                            report += table
+                                                # print(table)
+                                                report += table
 
 
 
-                                            #### ADD EMBED FOR TABLE
-                                            embed.add_field(name=f"Sorted by {title}", value=f"{report}", inline=False)
-
-                                else:
-                                    log.warning(f"Bad Request: Missing: {pjsonfile} \
-                                                                Make sure {previous_run} exists.")
+                                                #### ADD EMBED FOR TABLE
+                                                embed.add_field(name=f"Sorted by {title}", value=f"{report}", inline=False)
+                                    else:
+                                        log.warning(f"Bad Request: Missing: {pjsonfile} \
+                                                                    Make sure {previous_run} exists.")
+                                        embed = discord.Embed(
+                                            title=f"TierData for {dt} > {previous_run} (Delta Values)",
+                                            description=f"{sort} Differences (Elo:{elo})\n",
+                                            color=0xFF5733)
+                                        embed.set_thumbnail(
+                                            url="https://icons.iconarchive.com/icons/paomedia/small-n-flat/256/sign-error-icon.png")
+                                        embed.add_field(name=f"No TierData Found",
+                                                        value=f"Source file missing. Please try again after the next data sync or refine your search.",
+                                                        inline=False)
+                                elif indexmissing ==1:
                                     embed = discord.Embed(
-                                        title=f"TierData for {dt} > {previous_run} (Delta Values)",
+                                        title=f"TierData for {dt} > ERROR",
                                         description=f"{sort} Differences (Elo:{elo})\n",
                                         color=0xFF5733)
                                     embed.set_thumbnail(
                                         url="https://icons.iconarchive.com/icons/paomedia/small-n-flat/256/sign-error-icon.png")
                                     embed.add_field(name=f"No TierData Found",
-                                                    value=f"Source file missing. Please try again after the next data sync or refine your search.",
+                                                    value=f"Not enough datapoints in requested time period",
                                                     inline=False)
-                                    await ctx.channel.send(embed=embed)
 
                             elif view == "meta":
                                 log.info(f"Request Meta View")
                                 embed.add_field(name=f"Meta View: ", value=f"Heroes by Lane, Use%", inline=False)
+
                                 for ln in lanes:
                                     report = "\n"
 
-                                    df = json_normalize(data, ['data', 'data'])
-
-                                    # convert from strings:
-                                    df['win'] = list(map(lambda x: x[:-1], df['win'].values))
-                                    df['use'] = list(map(lambda x: x[:-1], df['use'].values))
-                                    df['ban'] = list(map(lambda x: x[:-1], df['ban'].values))
-
-                                    df['win'] = [float(x) for x in df['win'].values]
-                                    df['use'] = [float(x) for x in df['use'].values]
-                                    df['ban'] = [float(x) for x in df['ban'].values]
-
-                                    # add ranking column
-                                    df = df.sort_values(by=['use'], ascending=False)
-                                    df['urank'] = range(1, len(df) + 1)
-                                    df = df.sort_values(by=['win'], ascending=False)
-                                    df['wrank'] = range(1, len(df) + 1)
-                                    df = df.sort_values(by=['ban'], ascending=False)
-                                    df['banrank'] = range(1, len(df) + 1)
-
+                                    # build table
+                                    if period == "Day":
+                                        log.info("Requesting: " + jsonfile)
+                                        df = grabtierdata(data)
+                                    elif period == "Week":
+                                        dfw = sumdf[['name','-','elo','win_w','use_w','ban_w','wrank_w','urank_w','banrank_w']]
+                                        dfw = dfw.rename(columns={"win_w": "win","use_w": "use","ban_w":"ban","wrank_w":"wrank","urank_w":"urank","banrank_w":"banrank"})
+                                        df = dfw[dfw['elo'] == elo]
+                                    elif period == "Month":
+                                        dfw = sumdf[['name','-','elo','win_m','use_m','ban_m','wrank_m','urank_m','banrank_m']]
+                                        dfw = dfw.rename(columns={"win_m": "win","use_m": "use","ban_m":"ban","wrank_m":"wrank","urank_m":"urank","banrank_m":"banrank"})
+                                        df = dfw[dfw['elo'] == elo]
+                                    elif period == "Season":
+                                        dfw = sumdf[['name','-','elo','win_s','use_s','ban_s','wrank_s','urank_s','banrank_s']]
+                                        dfw = dfw.rename(columns={"win_s": "win","use_s": "use","ban_s":"ban","wrank_s":"wrank","urank_s":"urank","banrank_s":"banrank"})
+                                        df = dfw[dfw['elo'] == elo]
 
                                     rslt = getattr(laning, ln)
                                     df = df[df['name'].isin(rslt)]
-
 
                                     if ln == 'roam':
                                         loji = '<:roam:864272305310924820>'
@@ -826,13 +818,6 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                                         df = df.sort_values('urank', ascending=True).head(3)
                                     else:
                                         df = df.sort_values('urank', ascending=True).tail(3)
-
-
-                                    #### Add Icon Column
-                                    df['o'] = df['name'].str.lower()
-                                    df['o'] = df['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
-                                    df['-'] = df['o'].map(mojimap.moji)
-                                    del df['o']
 
                                     #### Add Padding and FORMAT:
                                     df['rank'] = df['urank'].astype(str)
@@ -883,25 +868,22 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                                 for p in prof:
                                     report = "\n"
 
-                                    df = json_normalize(data, ['data', 'data'])
-
-                                    # convert from strings:
-                                    df['win'] = list(map(lambda x: x[:-1], df['win'].values))
-                                    df['use'] = list(map(lambda x: x[:-1], df['use'].values))
-                                    df['ban'] = list(map(lambda x: x[:-1], df['ban'].values))
-
-                                    df['win'] = [float(x) for x in df['win'].values]
-                                    df['use'] = [float(x) for x in df['use'].values]
-                                    df['ban'] = [float(x) for x in df['ban'].values]
-
-                                    # add ranking column
-                                    df = df.sort_values(by=['use'], ascending=False)
-                                    df['urank'] = range(1, len(df) + 1)
-                                    df = df.sort_values(by=['win'], ascending=False)
-                                    df['wrank'] = range(1, len(df) + 1)
-                                    df = df.sort_values(by=['ban'], ascending=False)
-                                    df['banrank'] = range(1, len(df) + 1)
-
+                                    # build table
+                                    if period == "Day":
+                                        log.info("Requesting: " + jsonfile)
+                                        df = grabtierdata(data)
+                                    elif period == "Week":
+                                        dfw = sumdf[['name', '-', 'elo', 'win_w', 'use_w', 'ban_w', 'wrank_w', 'urank_w','banrank_w']]
+                                        dfw = dfw.rename(columns={"win_w": "win", "use_w": "use", "ban_w": "ban", "wrank_w": "wrank","urank_w": "urank", "banrank_w": "banrank"})
+                                        df = dfw[dfw['elo'] == elo]
+                                    elif period == "Month":
+                                        dfw = sumdf[['name', '-', 'elo', 'win_m', 'use_m', 'ban_m', 'wrank_m', 'urank_m','banrank_m']]
+                                        dfw = dfw.rename(columns={"win_m": "win", "use_m": "use", "ban_m": "ban", "wrank_m": "wrank","urank_m": "urank", "banrank_m": "banrank"})
+                                        df = dfw[dfw['elo'] == elo]
+                                    elif period == "Season":
+                                        dfw = sumdf[['name', '-', 'elo', 'win_s', 'use_s', 'ban_s', 'wrank_s', 'urank_s','banrank_s']]
+                                        dfw = dfw.rename(columns={"win_s": "win", "use_s": "use", "ban_s": "ban", "wrank_s": "wrank","urank_s": "urank", "banrank_s": "banrank"})
+                                        df = dfw[dfw['elo'] == elo]
 
                                     rslt = getattr(roles, p)
                                     df = df[df['name'].isin(rslt)]
@@ -923,13 +905,6 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                                         df = df.sort_values('urank', ascending=True).head(3)
                                     else:
                                         df = df.sort_values('urank', ascending=True).tail(3)
-
-
-                                    #### Add Icon Column
-                                    df['o'] = df['name'].str.lower()
-                                    df['o'] = df['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
-                                    df['-'] = df['o'].map(mojimap.moji)
-                                    del df['o']
 
                                     #### Add Padding and FORMAT:
                                     df['rank'] = df['urank'].astype(str)
@@ -980,30 +955,25 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                                 for crit in sort_by:
                                     report = "\n"
 
-                                    df = json_normalize(data, ['data', 'data'])
-
-                                    # convert from strings:
-                                    df['win'] = list(map(lambda x: x[:-1], df['win'].values))
-                                    df['use'] = list(map(lambda x: x[:-1], df['use'].values))
-                                    df['ban'] = list(map(lambda x: x[:-1], df['ban'].values))
-
-                                    df['win'] = [float(x) for x in df['win'].values]
-                                    df['use'] = [float(x) for x in df['use'].values]
-                                    df['ban'] = [float(x) for x in df['ban'].values]
-
-                                    # add ranking column
-                                    df = df.sort_values(by=['use'], ascending=False)
-                                    df['urank'] = range(1, len(df) + 1)
-                                    df = df.sort_values(by=['win'], ascending=False)
-                                    df['wrank'] = range(1, len(df) + 1)
-                                    df = df.sort_values(by=['ban'], ascending=False)
-                                    df['banrank'] = range(1, len(df) + 1)
-
-                                    #### Add Icon Column
-                                    df['o'] = df['name'].str.lower()
-                                    df['o'] = df['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
-                                    df['-'] = df['o'].map(mojimap.moji)
-                                    del df['o']
+                                    # build table
+                                    if period == "Day":
+                                        log.info("Requesting: " + jsonfile)
+                                        df = grabtierdata(data)
+                                    elif period == "Week":
+                                        dfw = sumdf[['name', '-', 'elo', 'win_w', 'use_w', 'ban_w', 'wrank_w', 'urank_w','banrank_w']]
+                                        dfw = dfw.rename(
+                                            columns={"win_w": "win", "use_w": "use", "ban_w": "ban", "wrank_w": "wrank","urank_w": "urank", "banrank_w": "banrank"})
+                                        df = dfw[dfw['elo'] == elo]
+                                    elif period == "Month":
+                                        dfw = sumdf[['name', '-', 'elo', 'win_m', 'use_m', 'ban_m', 'wrank_m', 'urank_m','banrank_m']]
+                                        dfw = dfw.rename(
+                                            columns={"win_m": "win", "use_m": "use", "ban_m": "ban", "wrank_m": "wrank","urank_m": "urank", "banrank_m": "banrank"})
+                                        df = dfw[dfw['elo'] == elo]
+                                    elif period == "Season":
+                                        dfw = sumdf[['name', '-', 'elo', 'win_s', 'use_s', 'ban_s', 'wrank_s', 'urank_s','banrank_s']]
+                                        dfw = dfw.rename(
+                                            columns={"win_s": "win", "use_s": "use", "ban_s": "ban", "wrank_s": "wrank","urank_s": "urank", "banrank_s": "banrank"})
+                                        df = dfw[dfw['elo'] == elo]
 
                                     # filter by role
                                     if role != "null":
@@ -1095,26 +1065,25 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                                 log.info(f"Request {title} View")
 
                                 report = "\n"
-                                df = json_normalize(data, ['data', 'data'])
 
-                                # convert from strings:
-                                df['win'] = list(map(lambda x: x[:-1], df['win'].values))
-                                df['use'] = list(map(lambda x: x[:-1], df['use'].values))
-                                df['ban'] = list(map(lambda x: x[:-1], df['ban'].values))
-
-                                df['win'] = [float(x) for x in df['win'].values]
-                                df['use'] = [float(x) for x in df['use'].values]
-                                df['ban'] = [float(x) for x in df['ban'].values]
-
-                                # add ranking column
-                                df = df.sort_values(by=['use'], ascending=False)
-                                df['urank'] = range(1, len(df) + 1)
-                                df = df.sort_values(by=['win'], ascending=False)
-                                df['wrank'] = range(1, len(df) + 1)
-                                df = df.sort_values(by=['ban'], ascending=False)
-                                df['banrank'] = range(1, len(df) + 1)
-
-
+                                if period == "Day":
+                                    log.info("Requesting: " + jsonfile)
+                                    df = grabtierdata(data)
+                                elif period == "Week":
+                                    dfw = sumdf[['name', '-', 'elo', 'win_w', 'use_w', 'ban_w', 'wrank_w', 'urank_w','banrank_w']]
+                                    dfw = dfw.rename(
+                                        columns={"win_w": "win", "use_w": "use", "ban_w": "ban", "wrank_w": "wrank","urank_w": "urank", "banrank_w": "banrank"})
+                                    df = dfw[dfw['elo'] == elo]
+                                elif period == "Month":
+                                    dfw = sumdf[['name', '-', 'elo', 'win_m', 'use_m', 'ban_m', 'wrank_m', 'urank_m','banrank_m']]
+                                    dfw = dfw.rename(
+                                        columns={"win_m": "win", "use_m": "use", "ban_m": "ban", "wrank_m": "wrank","urank_m": "urank", "banrank_m": "banrank"})
+                                    df = dfw[dfw['elo'] == elo]
+                                elif period == "Season":
+                                    dfw = sumdf[['name', '-', 'elo', 'win_s', 'use_s', 'ban_s', 'wrank_s', 'urank_s','banrank_s']]
+                                    dfw = dfw.rename(
+                                        columns={"win_s": "win", "use_s": "use", "ban_s": "ban", "wrank_s": "wrank","urank_s": "urank", "banrank_s": "banrank"})
+                                    df = dfw[dfw['elo'] == elo]
 
                                 # filter by role
                                 if role != "null":
@@ -1221,14 +1190,14 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                     #await ctx.channel.send(content="```No TierData Found...```")
 # MISSING FOLDER
             else:
-                log.warning(f"Bad Request: Missing: {latest_run}")
+                log.warning(f"Bad Request: Missing: {latest}")
                 await ctx.channel.send(content="```No TierData Reported Yet...```")
 
 # endregion
 
 # region HERO TABLE GENERATOR
 lvls = ["All", "Legend", "Mythic"]
-periods = ["Day","Week","Month","AT", "Season"]
+periods = ["Week","Month","Season"]
 
 # COMPILE HERO TABLES
 log.info("Compiling Lookup")
@@ -1236,11 +1205,11 @@ log.info("Compiling Lookup")
 # Create master table
 dfx = pd.DataFrame(columns=['name', 'win', 'use', 'ban', 'elo','urank','wrank','banrank'])
 
-if os.path.isdir(latest_run):  # check for raw data path
+if os.path.isdir(latest):  # check for raw data path
     #### FIND FILES
 
     for lvl in lvls:
-        jsonfile = f'{latest_run}/{lvl}.json'
+        jsonfile = f'{latest}/{lvl}.json'
         if os.path.exists(jsonfile):
             # print("Requesting: " + jsonfile)
             log.info("Requesting: " + jsonfile)
@@ -1249,25 +1218,8 @@ if os.path.isdir(latest_run):  # check for raw data path
             with open(jsonfile) as j:
                 data = json.load(j)
 
-                df = json_normalize(data, ['data', 'data'])
-
-                # convert from strings:
-                df['win'] = list(map(lambda x: x[:-1], df['win'].values))
-                df['use'] = list(map(lambda x: x[:-1], df['use'].values))
-                df['ban'] = list(map(lambda x: x[:-1], df['ban'].values))
-
-                df['win'] = [float(x) for x in df['win'].values]
-                df['use'] = [float(x) for x in df['use'].values]
-                df['ban'] = [float(x) for x in df['ban'].values]
-
-                # add ranking column
-                df = df.sort_values(by=['use'], ascending=False)
-                df['urank'] = range(1, len(df) + 1)
-                df = df.sort_values(by=['win'], ascending=False)
-                df['wrank'] = range(1, len(df) + 1)
-                df = df.sort_values(by=['ban'], ascending=False)
-                df['banrank'] = range(1, len(df) + 1)
-
+                # build table
+                df = grabtierdata(data)
                 df['elo'] = f"{lvl}"
 
                 # dfx.append(df, ignore_index = True)
@@ -1276,7 +1228,7 @@ if os.path.isdir(latest_run):  # check for raw data path
         else:
             log.warning(f"Bad Request: Missing: {jsonfile}")
 else:
-    log.warning(f"Bad Request: Missing: {latest_run}")
+    log.warning(f"Bad Request: Missing: {latest}")
 
 #elomoji
 roji = {'All': '<:Epic:910268690098974740>','Legend': '<:Legend:910268716044914688>','Mythic': '<:Mythic:910268741181374534>'}
@@ -1294,6 +1246,23 @@ dfx['-'] = dfx['elo'].map(roji)
                      description="Enter the Hero you'd like to find!",
                      option_type=3,
                      required=True
+                 ),
+                 create_option(
+                     name="elo",
+                     description="Look at TierData by Player Performance!",
+                     option_type=3,
+                     required=False,
+                     choices=[
+                         create_choice(
+                             name="All",
+                             value="All"),
+                         create_choice(
+                             name="Legend+",
+                             value="Legend"),
+                         create_choice(
+                             name="Mythic (400+)",
+                             value="Mythic")
+                     ]
                  ),
                  #create_option(
                  #    name="period",
@@ -1347,7 +1316,7 @@ dfx['-'] = dfx['elo'].map(roji)
                         ]
                          )
              ])
-async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null"):
+async def test(ctx, hero: str, elo="All", period="Week", show="null", about="null"):
     channelid = ctx.channel.id
     await ctx.send(f":bear: `Processing request...`")
     if channelid in optout:
@@ -1419,12 +1388,14 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
 
                 #### NEXT----  START TIERDATA
                 ico = mojimap.moji[hnl]
-                runtime = latest_run.replace(rawpath, "")
+                runtime = latest.replace(rawpath, "")
                 portrait = heroicons.portrait[hnl]
 
                 ###### Transform filters:
 
-                dt = period.replace("AT", "All-Time").replace("Week", "This Week").replace("Month", "This Month").replace("Day","Today")
+                dt = period.replace("Day", "Today").replace("Week", "This Week").replace("Month", "This Month").replace(
+                    "Season", "This Season")
+                dts = period.replace("Week", "day7").replace("Month", "day30").replace("Season","day90")
 
                 #### COLOR DECORATION
                 if elo == "All":
@@ -1448,7 +1419,7 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
                 #CHECK FOR HISTORY:
                 if show=="history":
                     #SHOW HISTORY CHART
-                    chart = f"{histpath}{elo}/{hnl}.png"
+                    chart = f"{histpath}{elo}/{dts}/{hnl}.png"
 
                     if not os.path.exists(chart):
                         embed.add_field(name=f" {ico} Historical Summary:", value=f"`No Chart Available...`", inline=False)
@@ -1477,7 +1448,7 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
                 # CHECK FOR HISTORY:
                 if show == "averages":
                     # SHOW AVERAGES CHART
-                    chart = f"{avgpath}{elo}/{hnl}.png"
+                    chart = f"{avgpath}{elo}/{dts}/{hnl}.png"
 
                     if not os.path.exists(chart):
                         embed.add_field(name=f" {ico} Historical Summary:", value=f"`No Chart Available...`", inline=False)
@@ -1703,6 +1674,8 @@ async def on_command_error(ctx, error):
         log.error(f"Command Not Found")
     if isinstance(error, commands.MissingRequiredArgument):
         log.error(f"Function Missing Argument")
+    if isinstance(error, commands.Forbidden):
+        log.error(f"Missing Access")
     if isinstance(error, commands.MissingPermissions):
         log.error(f"Insufficient Permissions")
     if isinstance(error, commands.BotMissingPermissions):
