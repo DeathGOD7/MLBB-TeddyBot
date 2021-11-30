@@ -75,7 +75,7 @@ else:
 # endregion
 
 # region VERSION
-version = "BETA Release Candidate Ver.03.051 (20211126)"
+version = "BETA Release Candidate Ver.03.054 (20211130)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -575,9 +575,9 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                                             df['wrank_d'] = df['wrank_x'] - df['wrank_y']
                                             df['banrank_d'] = df['banrank_x'] - df['banrank_y']
 
-                                            df['win_d'] = df['win_x'] - df['win_y']
-                                            df['use_d'] = df['use_x'] - df['use_y']
-                                            df['ban_d'] = df['ban_x'] - df['ban_y']
+                                            df['win_d'] = df['win_y'] - df['win_x']
+                                            df['use_d'] = df['use_y'] - df['use_x']
+                                            df['ban_d'] = df['ban_y'] - df['ban_x']
 
                                             df['win_d'] = df['win_d'].round(2)
                                             df['use_d'] = df['use_d'].round(2)
@@ -1550,9 +1550,9 @@ async def test(ctx, hero: str, elo="All", period="Week", show="null", about="nul
                         df['wrank_d'] = df['wrank_x'] - df['wrank_y']
                         df['banrank_d'] = df['banrank_x'] - df['banrank_y']
 
-                        df['win_d'] = df['win_x'] - df['win_y']
-                        df['use_d'] = df['use_x'] - df['use_y']
-                        df['ban_d'] = df['ban_x'] - df['ban_y']
+                        df['win_d'] = df['win_y'] - df['win_x']
+                        df['use_d'] = df['use_y'] - df['use_x']
+                        df['ban_d'] = df['ban_y'] - df['ban_x']
 
                         df['win_d'] = df['win_d'].round(2)
                         df['use_d'] = df['use_d'].round(2)
