@@ -56,7 +56,7 @@ def grabtierdata(data):
 def grabsummarydata(path):
 
     #check paths first
-    print(path)
+    print(f'Summary Table Built from: {path}')
     if os.path.exists(path):
 
         lvls = ['All', 'Legend', 'Mythic']
@@ -101,3 +101,46 @@ def grabsummarydata(path):
         return dfx
     else:
         print(f"{path} not found.")
+
+def grabherotable(latest):
+    # region HERO TABLE GENERATOR
+    lvls = ["All", "Legend", "Mythic"]
+    periods = ["Week", "Month", "Season"]
+
+    print(f'Hero Table Built from: {latest}')
+    # Create master table
+    dfx = pd.DataFrame(columns=['name', 'win', 'use', 'ban', 'elo', 'urank', 'wrank', 'banrank'])
+
+    if os.path.isdir(latest):  # check for raw data path
+        #### FIND FILES
+
+        for lvl in lvls:
+            jsonfile = f'{latest}/{lvl}.json'
+            if os.path.exists(jsonfile):
+                print("Requesting: " + jsonfile)
+
+                ##### BUILD TABLES ####
+                with open(jsonfile) as j:
+                    data = json.load(j)
+
+                    # build table
+                    df = grabtierdata(data)
+                    df['elo'] = f"{lvl}"
+
+                    # dfx.append(df, ignore_index = True)
+                    dfx = pd.concat([dfx, df], axis=0)
+                    # print(df)
+            else:
+                print(f"Bad Request: Missing: {jsonfile}")
+    else:
+        print(f"Bad Request: Missing: {latest}")
+
+    # elomoji
+    roji = {'All': '<:Epic:910268690098974740>', 'Legend': '<:Legend:910268716044914688>',
+            'Mythic': '<:Mythic:910268741181374534>'}
+    dfx['-'] = dfx['elo'].map(roji)
+
+    return dfx
+    print(f"Combined:{dfx}")
+    # log.debug(f"{dfx}")
+    # endregion
