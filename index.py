@@ -75,7 +75,7 @@ else:
 # endregion
 
 # region VERSION
-version = "BETA Release Candidate Ver.03.1 (20211206)"
+version = "BETA Release Candidate Ver.03.11 (20211206)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -309,11 +309,11 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                 desc = "Command Options List:\
                        \n\n`/td` - Show BAN%/WR%/USE% for this Week \
                        \n- `elo:(Normal,High,Very-High)`, default: `All-Levels` \
-                       \n- `period:(Day,Week,Month,All-Time)`, default: `Day` ***COMING SOON*** \
+                       \n- `period:(Week,Month,3-Months)`, default: `Today` - Look at the tier data changes over a period of time! \
                        \n- `sort:(Top, Bottom)`, default: Top \
                        \n- `role:(Fighter,Mage,Support,Assassin,Marksman,Tank)`, default: `none` \
                        \n- `view:(Normal,Meta,Role,WinRate,BAN,Use)` default: `Normal` - The view changes from top5 BAN/WR/USE, top10 by BAN,WR,or USE, or top3 by Meta or Role \
-                       \n- `chartview:`(Elo x WIN/BAN/USE)+(box optional)`, default: `none` - Historical chart or averages, based on Top5 for each filter"
+                       \n- `chartview:(Elo x WIN/BAN/USE)+(box optional)`, default: `none` - Historical chart or averages, based on Top5 for each filter"
 
             #Declare Embed
             helpembed = discord.Embed(
