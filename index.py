@@ -75,7 +75,7 @@ else:
 # endregion
 
 # region VERSION
-version = "BETA Release Candidate Ver.03.11 (20211206)"
+version = "BETA Release Candidate Ver.03.15 (20211217)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -1603,7 +1603,8 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
                         # print(hdf)
 
                     if hdf.empty:
-                        hdf = "No data available."
+                        hdf = "`No data available.`"
+                        table = hdf
                     else:
                         table = hdf.to_string(index=False)
                     embed.add_field(name=f" {ico} Summary for: {dt}", value=f"{table}", inline=False)
