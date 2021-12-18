@@ -34,7 +34,8 @@ roam = [
 'Tigreal',
 'Uranus',
 'Vale',
-'X.Borg'
+'X.Borg',
+'Floryn'
 ]
 gold=[
 'Beatrix',
@@ -82,7 +83,8 @@ mid=[
 'Valir',
 'Vexana',
 'Yve',
-'Zhask'
+'Zhask',
+'Valentina'
 ]
 exp=[
 'Aldous',

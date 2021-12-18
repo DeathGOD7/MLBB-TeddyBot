@@ -75,7 +75,7 @@ else:
 # endregion
 
 # region VERSION
-version = "BETA Release Candidate Ver.03.054 (20211130)"
+version = "BETA Release Candidate Ver.03.15 (20211217)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -120,6 +120,7 @@ sumdf = grabsummarydata(summarycsv)
 
 #build heroes master table
 dfx = grabherotable(latest)
+roji = {'All': '<:Epic:910268690098974740>', 'Legend': '<:Legend:910268716044914688>','Mythic': '<:Mythic:910268741181374534>'}
 
 ##### DISCORD LISTENERS #######
 
@@ -308,11 +309,11 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                 desc = "Command Options List:\
                        \n\n`/td` - Show BAN%/WR%/USE% for this Week \
                        \n- `elo:(Normal,High,Very-High)`, default: `All-Levels` \
-                       \n- `period:(Day,Week,Month,All-Time)`, default: `Day` ***COMING SOON*** \
+                       \n- `period:(Week,Month,3-Months)`, default: `Today` - Look at the tier data changes over a period of time! \
                        \n- `sort:(Top, Bottom)`, default: Top \
                        \n- `role:(Fighter,Mage,Support,Assassin,Marksman,Tank)`, default: `none` \
                        \n- `view:(Normal,Meta,Role,WinRate,BAN,Use)` default: `Normal` - The view changes from top5 BAN/WR/USE, top10 by BAN,WR,or USE, or top3 by Meta or Role \
-                       \n- `chartview:`(Elo x WIN/BAN/USE)+(box optional)`, default: `none` - Historical chart or averages, based on Top5 for each filter"
+                       \n- `chartview:(Elo x WIN/BAN/USE)+(box optional)`, default: `none` - Historical chart or averages, based on Top5 for each filter"
 
             #Declare Embed
             helpembed = discord.Embed(
@@ -1222,29 +1223,23 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                              value="Mythic")
                      ]
                  ),
-                 #create_option(
-                 #    name="period",
-                 #    description="Look at TierData for the previous time-period.",
-                 #    option_type=3,
-                 #    required=False,
-                 #    choices=[
-                 #        create_choice(
-                 #            name="Day",
-                 #            value="Month"),
-                 #        create_choice(
-                 #            name="Month",
-                 #            value="Month"),
-                 #        create_choice(
-                 #            name="Week",
-                 #            value="Week"),
-                 #        create_choice(
-                 #            name="All-Time",
-                 #            value="AT"),
-                 #        create_choice(
-                 #            name="Season",
-                 #            value="Season")
-                 #    ]
-                 #),
+                 create_option(
+                     name="period",
+                     description="Look at TierData for the previous time-period.",
+                     option_type=3,
+                     required=False,
+                     choices=[
+                         create_choice(
+                             name="Week (7-days)",
+                             value="Week"),
+                         create_choice(
+                             name="Month (30-days)",
+                             value="Month"),
+                         create_choice(
+                             name="Season (90-days)",
+                             value="Season")
+                     ]
+                 ),
                  create_option(
                      name="show",
                      description="Look at TierData over-time.",
@@ -1274,7 +1269,7 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                         ]
                          )
              ])
-async def test(ctx, hero: str, elo="All", period="Week", show="null", about="null"):
+async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null"):
     channelid = ctx.channel.id
     await ctx.send(f":bear: `Processing request...`")
     if channelid in optout:
@@ -1354,7 +1349,7 @@ async def test(ctx, hero: str, elo="All", period="Week", show="null", about="nul
 
                 dt = period.replace("Day", "Today").replace("Week", "This Week").replace("Month", "This Month").replace(
                     "Season", "This Season")
-                dts = period.replace("Week", "day7").replace("Month", "day30").replace("Season","day90")
+                dts = period.replace("Day","day7").replace("Week", "day7").replace("Month", "day30").replace("Season","day90")
 
                 #### COLOR DECORATION
                 if elo == "All":
@@ -1440,62 +1435,181 @@ async def test(ctx, hero: str, elo="All", period="Week", show="null", about="nul
                 if show == "null":
                     outlier = 0
 # region STANDARD TABLE
-                    #### Create Filters
-                    nfilter = dfx.isin([hn]).any(axis=1)
+                    if period == "Day":
 
-                    if elo == "All":
-                        efilter = dfx["elo"]
-                    else:
-                        efilter = dfx["elo"].isin([elo])
+                        #### Create Filters
+                        nfilter = dfx.isin([hn]).any(axis=1)
 
-                    hdf = dfx[nfilter & efilter]
+                        if elo == "All":
+                            efilter = dfx["elo"]
+                        else:
+                            efilter = dfx["elo"].isin([elo])
 
-                    hdf = hdf.reindex(columns=['-','elo', 'win', 'use', 'ban', 'wrank', 'urank', 'banrank'])
+                        hdf = dfx[nfilter & efilter]
 
-                    #### Add Padding and FORMAT:
-                    hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
-                    hdf['win'] = hdf['win'].astype(str)
-                    hdf['win'] = ('`' + hdf['win'].str.center(5) + '`')
-                    hdf['use'] = hdf['use'].astype(str)
-                    hdf['use'] = ('`' + hdf['use'].str.center(5) + '`')
-                    hdf['ban'] = hdf['ban'].astype(str)
-                    hdf['ban'] = ('`' + hdf['ban'].str.center(5) + '`')
-                    hdf['wrank'] = hdf['wrank'].astype(str)
-                    hdf['wrank'] = ('`' + hdf['wrank'].str.center(3) + '`')
-                    hdf['urank'] = hdf['urank'].astype(str)
-                    hdf['urank'] = ('`' + hdf['urank'].str.center(3) + '`')
-                    hdf['banrank'] = hdf['banrank'].astype(str)
-                    hdf['banrank'] = ('`' + hdf['banrank'].str.center(3) + '`')
+                        hdf = hdf.reindex(columns=['-','elo', 'win', 'use', 'ban', 'wrank', 'urank', 'banrank'])
 
-                    # FORMAT COLUMN HEADER
-                    e = "ELO"
-                    e = e.center(6, " ")
-                    i = "-"
-                    i = i.center(2, " ")
-                    w = "WIN%"
-                    w = w.center(5, " ")
-                    u = "USE%"
-                    u = u.center(5, " ")
-                    k = "BAN%"
-                    k = k.center(5, " ")
-                    wr = "WIN"
-                    wr = wr.center(3, " ")
-                    ur = "USE"
-                    ur = ur.center(3, " ")
-                    br = "BAN"
-                    br = br.center(3, " ")
-                    hdf.rename(columns={'-': i,'elo': e, 'win': w, 'use': u, 'ban': k,'wrank':wr, 'urank':ur, 'banrank':br}, inplace=True)
-                    hdf.columns = hdf.columns.astype(str)
-                    hdf.columns = ('`' + hdf.columns + '`')
+                        #### Add Padding and FORMAT:
+                        hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
+                        hdf['win'] = hdf['win'].astype(str)
+                        hdf['win'] = ('`' + hdf['win'].str.center(5) + '`')
+                        hdf['use'] = hdf['use'].astype(str)
+                        hdf['use'] = ('`' + hdf['use'].str.center(5) + '`')
+                        hdf['ban'] = hdf['ban'].astype(str)
+                        hdf['ban'] = ('`' + hdf['ban'].str.center(5) + '`')
+                        hdf['wrank'] = hdf['wrank'].astype(str)
+                        hdf['wrank'] = ('`' + hdf['wrank'].str.center(3) + '`')
+                        hdf['urank'] = hdf['urank'].astype(str)
+                        hdf['urank'] = ('`' + hdf['urank'].str.center(3) + '`')
+                        hdf['banrank'] = hdf['banrank'].astype(str)
+                        hdf['banrank'] = ('`' + hdf['banrank'].str.center(3) + '`')
 
-                    #print(hdf)
+                        # FORMAT COLUMN HEADER
+                        e = "ELO"
+                        e = e.center(6, " ")
+                        i = "-"
+                        i = i.center(2, " ")
+                        w = "WIN%"
+                        w = w.center(5, " ")
+                        u = "USE%"
+                        u = u.center(5, " ")
+                        k = "BAN%"
+                        k = k.center(5, " ")
+                        wr = "WIN"
+                        wr = wr.center(3, " ")
+                        ur = "USE"
+                        ur = ur.center(3, " ")
+                        br = "BAN"
+                        br = br.center(3, " ")
+                        hdf.rename(columns={'-': i, 'elo': e, 'win': w, 'use': u, 'ban': k, 'wrank': wr, 'urank': ur,
+                                            'banrank': br}, inplace=True)
+                        hdf.columns = hdf.columns.astype(str)
+                        hdf.columns = ('`' + hdf.columns + '`')
+
+                        # print(hdf)
+                    elif period == "Week":
+                        #### Create Filters
+                        nfilter = sumdf.isin([hn]).any(axis=1)
+
+                        if elo == "All":
+                            efilter = sumdf["elo"]
+                        else:
+                            efilter = sumdf["elo"].isin([elo])
+
+                        hdf = sumdf[nfilter & efilter]
+                        hdf = hdf.reindex(columns=['-', 'elo', 'win_w', 'use_w', 'ban_w'])
+                        hdf['-'] = hdf['elo'].map(roji)
+
+                        #### Add Padding and FORMAT:
+                        hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
+                        hdf['win_w'] = hdf['win_w'].astype(str)
+                        hdf['win_w'] = ('`' + hdf['win_w'].str.center(5) + '`')
+                        hdf['use_w'] = hdf['use_w'].astype(str)
+                        hdf['use_w'] = ('`' + hdf['use_w'].str.center(5) + '`')
+                        hdf['ban_w'] = hdf['ban_w'].astype(str)
+                        hdf['ban_w'] = ('`' + hdf['ban_w'].str.center(5) + '`')
+
+                        # FORMAT COLUMN HEADER
+                        e = "ELO"
+                        e = e.center(6, " ")
+                        i = "-"
+                        i = i.center(2, " ")
+                        w = "WIN%"
+                        w = w.center(5, " ")
+                        u = "USE%"
+                        u = u.center(5, " ")
+                        k = "BAN%"
+                        k = k.center(5, " ")
+                        hdf.rename(columns={'-': i, 'elo': e, 'win_w': w, 'use_w': u, 'ban_w': k}, inplace=True)
+                        hdf.columns = hdf.columns.astype(str)
+                        hdf.columns = ('`' + hdf.columns + '`')
+
+                        # print(hdf)
+                    elif period == "Month":
+                        #### Create Filters
+                        nfilter = sumdf.isin([hn]).any(axis=1)
+
+                        if elo == "All":
+                            efilter = sumdf["elo"]
+                        else:
+                            efilter = sumdf["elo"].isin([elo])
+
+                        hdf = sumdf[nfilter & efilter]
+                        hdf = hdf.reindex(columns=['-', 'elo', 'win_m', 'use_m', 'ban_m'])
+                        hdf['-'] = hdf['elo'].map(roji)
+
+                        #### Add Padding and FORMAT:
+                        hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
+                        hdf['win_m'] = hdf['win_m'].astype(str)
+                        hdf['win_m'] = ('`' + hdf['win_m'].str.center(5) + '`')
+                        hdf['use_m'] = hdf['use_m'].astype(str)
+                        hdf['use_m'] = ('`' + hdf['use_m'].str.center(5) + '`')
+                        hdf['ban_m'] = hdf['ban_m'].astype(str)
+                        hdf['ban_m'] = ('`' + hdf['ban_m'].str.center(5) + '`')
+
+                        # FORMAT COLUMN HEADER
+                        e = "ELO"
+                        e = e.center(6, " ")
+                        i = "-"
+                        i = i.center(2, " ")
+                        w = "WIN%"
+                        w = w.center(5, " ")
+                        u = "USE%"
+                        u = u.center(5, " ")
+                        k = "BAN%"
+                        k = k.center(5, " ")
+                        hdf.rename(columns={'-': i, 'elo': e, 'win_m': w, 'use_m': u, 'ban_m': k}, inplace=True)
+                        hdf.columns = hdf.columns.astype(str)
+                        hdf.columns = ('`' + hdf.columns + '`')
+
+                        # print(hdf)
+                    elif period == "Season":
+                        #### Create Filters
+                        nfilter = sumdf.isin([hn]).any(axis=1)
+
+                        if elo == "All":
+                            efilter = sumdf["elo"]
+                        else:
+                            efilter = sumdf["elo"].isin([elo])
+
+                        hdf = sumdf[nfilter & efilter]
+                        hdf = hdf.reindex(columns=['-', 'elo', 'win_s', 'use_s', 'ban_s'])
+                        hdf['-'] = hdf['elo'].map(roji)
+
+                        #### Add Padding and FORMAT:
+                        hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
+                        hdf['win_s'] = hdf['win_s'].astype(str)
+                        hdf['win_s'] = ('`' + hdf['win_s'].str.center(5) + '`')
+                        hdf['use_s'] = hdf['use_s'].astype(str)
+                        hdf['use_s'] = ('`' + hdf['use_s'].str.center(5) + '`')
+                        hdf['ban_s'] = hdf['ban_s'].astype(str)
+                        hdf['ban_s'] = ('`' + hdf['ban_s'].str.center(5) + '`')
+
+                        # FORMAT COLUMN HEADER
+                        e = "ELO"
+                        e = e.center(6, " ")
+                        i = "-"
+                        i = i.center(2, " ")
+                        w = "WIN%"
+                        w = w.center(5, " ")
+                        u = "USE%"
+                        u = u.center(5, " ")
+                        k = "BAN%"
+                        k = k.center(5, " ")
+                        hdf.rename(columns={'-': i, 'elo': e, 'win_s': w, 'use_s': u, 'ban_s': k}, inplace=True)
+                        hdf.columns = hdf.columns.astype(str)
+                        hdf.columns = ('`' + hdf.columns + '`')
+
+                        # print(hdf)
 
                     if hdf.empty:
-                        hdf = "No data available."
+                        hdf = "`No data available.`"
+                        table = hdf
                     else:
                         table = hdf.to_string(index=False)
                     embed.add_field(name=f" {ico} Summary for: {dt}", value=f"{table}", inline=False)
-# endregion
+
+                    # endregion
 # region DELTA TABLE
                     log.info(f"Request HERO Delta View")
                     log.info(f"Request Delta View")
@@ -1524,9 +1638,19 @@ async def test(ctx, hero: str, elo="All", period="Week", show="null", about="nul
 
                     if indexmissing == 0:
                         previous = os.path.join(rawpath, previous_run)
-                        log.info(f"Delta Compare: {period} {previous}")
+                        log.info(f"Delta Compare: {previous_run} > {latest_run}")
+                        embed.add_field(name=f"Delta Compare:", value=f" {previous_run} > {latest_run}", inline=False)
+
+                        #### Create Filters
+                        nfilter = dfx.isin([hn]).any(axis=1)
+
+                        if elo == "All":
+                            efilter = dfx["elo"]
+                        else:
+                            efilter = dfx["elo"].isin([elo])
 
                         hldf = dfx[nfilter & efilter]
+                        #hldf = chdf[nfilter & efilter]
                         hldf = hldf.reindex(columns=['-', 'elo', 'win', 'use', 'ban', 'wrank', 'urank', 'banrank'])
 
                         pdf = grabherotable(previous)
@@ -1540,162 +1664,170 @@ async def test(ctx, hero: str, elo="All", period="Week", show="null", about="nul
                         phdf = pdf[pnfilter & pefilter]
                         phdf = phdf.reindex(columns=['elo', 'win', 'use', 'ban', 'wrank', 'urank', 'banrank'])
 
+                        if hldf.empty or phdf.empty:
+                            embed.add_field(name=f"No Delta Data Found",
+                                            value=f"Not enough datapoints in requested time period",
+                                            inline=False)
+                        else:
 
-                        df = hldf.merge(phdf, how='left', on='elo')
-                        print(f"Merged Table:\n {df}")
-                        # region DataFrame Calculations
+                            print(f"Current:\n{latest}\n{hldf}")
+                            print(f"Previous:\n{previous}\n{phdf}")
 
-                        # CALCULATE DELTAS
-                        df['urank_d'] = df['urank_x'] - df['urank_y']
-                        df['wrank_d'] = df['wrank_x'] - df['wrank_y']
-                        df['banrank_d'] = df['banrank_x'] - df['banrank_y']
+                            df = hldf.merge(phdf, how='left', on='elo')
+                            print(f"Merged Table:\n {df}")
+                            # region DataFrame Calculations
 
-                        df['win_d'] = df['win_y'] - df['win_x']
-                        df['use_d'] = df['use_y'] - df['use_x']
-                        df['ban_d'] = df['ban_y'] - df['ban_x']
+                            # CALCULATE DELTAS
+                            df['urank_d'] = df['urank_x'] - df['urank_y']
+                            df['wrank_d'] = df['wrank_x'] - df['wrank_y']
+                            df['banrank_d'] = df['banrank_x'] - df['banrank_y']
 
-                        df['win_d'] = df['win_d'].round(2)
-                        df['use_d'] = df['use_d'].round(2)
-                        df['ban_d'] = df['ban_d'].round(2)
-                        # endregion
-                        #print(f"Calculated Table:\n {df}")
+                            df['win_d'] = df['win_y'] - df['win_x']
+                            df['use_d'] = df['use_y'] - df['use_x']
+                            df['ban_d'] = df['ban_y'] - df['ban_x']
 
-                        # region ColumnHeader Mappings
+                            df['win_d'] = df['win_d'].round(2)
+                            df['use_d'] = df['use_d'].round(2)
+                            df['ban_d'] = df['ban_d'].round(2)
+                            # endregion
+                            #print(f"Calculated Table:\n {df}")
 
-                        r = "RATING"
-                        r = r.center(9, " ")
-                        rd = "R▲"
-                        rd = rd.center(6, " ")
-                        i = "-"
-                        i = i.center(2, " ")
-                        w = "WIN"
-                        w = w.center(6, " ")
-                        u = "USE"
-                        u = u.center(6, " ")
-                        k = "BAN"
-                        k = k.center(6, " ")
+                            # region ColumnHeader Mappings
 
-                        wd = "WIN▲"
-                        wd = wd.center(6, " ")
-                        ud = "USE▲"
-                        ud = ud.center(6, " ")
-                        kd = "BAN▲"
-                        kd = kd.center(6, " ")
+                            r = "RATING"
+                            r = r.center(9, " ")
+                            rd = "R▲"
+                            rd = rd.center(6, " ")
+                            i = "-"
+                            i = i.center(2, " ")
+                            w = "WIN"
+                            w = w.center(6, " ")
+                            u = "USE"
+                            u = u.center(6, " ")
+                            k = "BAN"
+                            k = k.center(6, " ")
 
-                        print (df.columns)
-                        # endregion
+                            wd = "WIN▲"
+                            wd = wd.center(6, " ")
+                            ud = "USE▲"
+                            ud = ud.center(6, " ")
+                            kd = "BAN▲"
+                            kd = kd.center(6, " ")
 
-                        for crit in dsort_by:
-                            report = "\n"
+                            print (df.columns)
+                            # endregion
 
-                            if crit == "wrank_d":
-                                title = "WR+/-"
-                                dfd = df.reindex(
-                                    columns=[str(crit), '-', 'wrank_x', 'wrank_y', 'win_x', 'win_d'])
-                                # print(f"Pre-Table for {crit}:\n {dfd}")
+                            for crit in dsort_by:
+                                report = "\n"
 
-                                # concat & format field
-                                dfd['wrank_d'] = dfd['wrank_d'].mask(dfd['wrank_d'] >= 0,
-                                                                     ("+" + dfd['wrank_d'].astype(str)))
-                                dfd['wrank'] = dfd['wrank_x'].astype(str) + " > " + dfd['wrank_y'].astype(str)
-                                dfd['win_d'] = dfd['win_d'].mask(dfd['win_d'] >= 0,
-                                                                 ("+" + dfd['win_d'].astype(str)))
+                                if crit == "wrank_d":
+                                    title = "WR+/-"
+                                    dfd = df.reindex(
+                                        columns=[str(crit), '-', 'wrank_x', 'wrank_y', 'win_x', 'win_d'])
+                                    # print(f"Pre-Table for {crit}:\n {dfd}")
 
-                                # drop & reorder
-                                cols = ['-','wrank_d', 'wrank', 'win_x', 'win_d']
-                                dfd = dfd[cols]
+                                    # concat & format field
+                                    dfd['wrank_d'] = dfd['wrank_d'].mask(dfd['wrank_d'] >= 0,
+                                                                         ("+" + dfd['wrank_d'].astype(str)))
+                                    dfd['wrank'] = dfd['wrank_x'].astype(str) + " > " + dfd['wrank_y'].astype(str)
+                                    dfd['win_d'] = dfd['win_d'].mask(dfd['win_d'] >= 0,
+                                                                     ("+" + dfd['win_d'].astype(str)))
 
-                                # add padding:
-                                dfd['wrank'] = ('`' + dfd['wrank'].str.center(9) + '`')
-                                dfd['wrank_d'] = dfd['wrank_d'].astype(str)
-                                dfd['wrank_d'] = ('`' + dfd['wrank_d'].str.center(6) + '`')
-                                dfd['win_x'] = dfd['win_x'].astype(str)
-                                dfd['win_x'] = ('`' + dfd['win_x'].str.center(6) + '`')
-                                dfd['win_d'] = dfd['win_d'].astype(str)
-                                dfd['win_d'] = ('`' + dfd['win_d'].str.center(6) + '`')
+                                    # drop & reorder
+                                    cols = ['-','wrank_d', 'wrank', 'win_x', 'win_d']
+                                    dfd = dfd[cols]
 
-                                # format header:
-                                dfd.rename(columns={'wrank_d': rd, 'wrank': r, '-': i,'win_x': w,
-                                                    'win_d': wd}, inplace=True)
-                                dfd.columns = dfd.columns.astype(str)
-                                dfd.columns = ('`' + dfd.columns + '`')
+                                    # add padding:
+                                    dfd['wrank'] = ('`' + dfd['wrank'].str.center(9) + '`')
+                                    dfd['wrank_d'] = dfd['wrank_d'].astype(str)
+                                    dfd['wrank_d'] = ('`' + dfd['wrank_d'].str.center(6) + '`')
+                                    dfd['win_x'] = dfd['win_x'].astype(str)
+                                    dfd['win_x'] = ('`' + dfd['win_x'].str.center(6) + '`')
+                                    dfd['win_d'] = dfd['win_d'].astype(str)
+                                    dfd['win_d'] = ('`' + dfd['win_d'].str.center(6) + '`')
 
-                            elif crit == "banrank_d":
-                                title = "BAN+/-"
-                                dfd = df.reindex(
-                                    columns=[str(crit), '-', 'banrank_x', 'banrank_y', 'ban_x',
-                                             'ban_d'])
-                                # print(f"Pre-Table for {crit}:\n {dfd}")
+                                    # format header:
+                                    dfd.rename(columns={'wrank_d': rd, 'wrank': r, '-': i,'win_x': w,
+                                                        'win_d': wd}, inplace=True)
+                                    dfd.columns = dfd.columns.astype(str)
+                                    dfd.columns = ('`' + dfd.columns + '`')
 
-                                # concat & format field
-                                dfd['banrank_d'] = dfd['banrank_d'].mask(dfd['banrank_d'] >= 0,
-                                                                         ("+" + dfd['banrank_d'].astype(str)))
-                                dfd['banrank'] = dfd['banrank_x'].astype(str) + " > " + dfd['banrank_y'].astype(
-                                    str)
-                                dfd['ban_d'] = dfd['ban_d'].mask(dfd['ban_d'] >= 0,
-                                                                 ("+" + dfd['ban_d'].astype(str)))
+                                elif crit == "banrank_d":
+                                    title = "BAN+/-"
+                                    dfd = df.reindex(
+                                        columns=[str(crit), '-', 'banrank_x', 'banrank_y', 'ban_x',
+                                                 'ban_d'])
+                                    # print(f"Pre-Table for {crit}:\n {dfd}")
 
-                                cols = ['-', 'banrank_d', 'banrank', 'ban_x', 'ban_d']
-                                dfd = dfd[cols]
+                                    # concat & format field
+                                    dfd['banrank_d'] = dfd['banrank_d'].mask(dfd['banrank_d'] >= 0,
+                                                                             ("+" + dfd['banrank_d'].astype(str)))
+                                    dfd['banrank'] = dfd['banrank_x'].astype(str) + " > " + dfd['banrank_y'].astype(
+                                        str)
+                                    dfd['ban_d'] = dfd['ban_d'].mask(dfd['ban_d'] >= 0,
+                                                                     ("+" + dfd['ban_d'].astype(str)))
 
-                                # add padding:
-                                dfd['banrank'] = ('`' + dfd['banrank'].str.center(9) + '`')
-                                dfd['banrank_d'] = dfd['banrank_d'].astype(str)
-                                dfd['banrank_d'] = ('`' + dfd['banrank_d'].str.center(6) + '`')
-                                dfd['ban_x'] = dfd['ban_x'].astype(str)
-                                dfd['ban_x'] = ('`' + dfd['ban_x'].str.center(6) + '`')
-                                dfd['ban_d'] = dfd['ban_d'].astype(str)
-                                dfd['ban_d'] = ('`' + dfd['ban_d'].str.center(6) + '`')
+                                    cols = ['-', 'banrank_d', 'banrank', 'ban_x', 'ban_d']
+                                    dfd = dfd[cols]
 
-                                # format header:
-                                dfd.rename(
-                                    columns={'banrank_d': rd, 'banrank': r, '-': i, 'ban_x': k,
-                                             'ban_d': kd}, inplace=True)
-                                dfd.columns = dfd.columns.astype(str)
-                                dfd.columns = ('`' + dfd.columns + '`')
+                                    # add padding:
+                                    dfd['banrank'] = ('`' + dfd['banrank'].str.center(9) + '`')
+                                    dfd['banrank_d'] = dfd['banrank_d'].astype(str)
+                                    dfd['banrank_d'] = ('`' + dfd['banrank_d'].str.center(6) + '`')
+                                    dfd['ban_x'] = dfd['ban_x'].astype(str)
+                                    dfd['ban_x'] = ('`' + dfd['ban_x'].str.center(6) + '`')
+                                    dfd['ban_d'] = dfd['ban_d'].astype(str)
+                                    dfd['ban_d'] = ('`' + dfd['ban_d'].str.center(6) + '`')
 
-                            elif crit == "urank_d":
-                                title = "Use+/-"
-                                dfd = df.reindex(
-                                    columns=[str(crit), '-', 'urank_x', 'urank_y', 'use_x', 'use_d'])
-                                # print(f"Pre-Table for {crit}:\n {dfd}")
+                                    # format header:
+                                    dfd.rename(
+                                        columns={'banrank_d': rd, 'banrank': r, '-': i, 'ban_x': k,
+                                                 'ban_d': kd}, inplace=True)
+                                    dfd.columns = dfd.columns.astype(str)
+                                    dfd.columns = ('`' + dfd.columns + '`')
 
-                                # concat & format field
-                                dfd['urank_d'] = dfd['urank_d'].mask(dfd['urank_d'] >= 0,
-                                                                     ("+" + dfd['urank_d'].astype(str)))
-                                dfd['urank'] = dfd['urank_x'].astype(str) + " > " + dfd['urank_y'].astype(str)
-                                dfd['use_d'] = dfd['use_d'].mask(dfd['use_d'] >= 0,
-                                                                 ("+" + dfd['use_d'].astype(str)))
+                                elif crit == "urank_d":
+                                    title = "Use+/-"
+                                    dfd = df.reindex(
+                                        columns=[str(crit), '-', 'urank_x', 'urank_y', 'use_x', 'use_d'])
+                                    # print(f"Pre-Table for {crit}:\n {dfd}")
 
-                                # drop & reorder
-                                cols = [ '-', 'urank_d', 'urank','use_x', 'use_d']
-                                dfd = dfd[cols]
+                                    # concat & format field
+                                    dfd['urank_d'] = dfd['urank_d'].mask(dfd['urank_d'] >= 0,
+                                                                         ("+" + dfd['urank_d'].astype(str)))
+                                    dfd['urank'] = dfd['urank_x'].astype(str) + " > " + dfd['urank_y'].astype(str)
+                                    dfd['use_d'] = dfd['use_d'].mask(dfd['use_d'] >= 0,
+                                                                     ("+" + dfd['use_d'].astype(str)))
 
-                                # add padding:
-                                dfd['urank'] = ('`' + dfd['urank'].str.center(9) + '`')
-                                dfd['urank_d'] = dfd['urank_d'].astype(str)
-                                dfd['urank_d'] = ('`' + dfd['urank_d'].str.center(6) + '`')
-                                dfd['use_x'] = dfd['use_x'].astype(str)
-                                dfd['use_x'] = ('`' + dfd['use_x'].str.center(6) + '`')
-                                dfd['use_d'] = dfd['use_d'].astype(str)
-                                dfd['use_d'] = ('`' + dfd['use_d'].str.center(6) + '`')
+                                    # drop & reorder
+                                    cols = [ '-', 'urank_d', 'urank','use_x', 'use_d']
+                                    dfd = dfd[cols]
 
-                                # format header:
-                                dfd.rename(columns={'urank_d': rd, 'urank': r, '-': i, 'use_x': u,
-                                                    'use_d': ud}, inplace=True)
-                                dfd.columns = dfd.columns.astype(str)
-                                dfd.columns = ('`' + dfd.columns + '`')
+                                    # add padding:
+                                    dfd['urank'] = ('`' + dfd['urank'].str.center(9) + '`')
+                                    dfd['urank_d'] = dfd['urank_d'].astype(str)
+                                    dfd['urank_d'] = ('`' + dfd['urank_d'].str.center(6) + '`')
+                                    dfd['use_x'] = dfd['use_x'].astype(str)
+                                    dfd['use_x'] = ('`' + dfd['use_x'].str.center(6) + '`')
+                                    dfd['use_d'] = dfd['use_d'].astype(str)
+                                    dfd['use_d'] = ('`' + dfd['use_d'].str.center(6) + '`')
 
-                            # print(f"Rebuilt Table for {crit}:\n {dfd}")
+                                    # format header:
+                                    dfd.rename(columns={'urank_d': rd, 'urank': r, '-': i, 'use_x': u,
+                                                        'use_d': ud}, inplace=True)
+                                    dfd.columns = dfd.columns.astype(str)
+                                    dfd.columns = ('`' + dfd.columns + '`')
 
-                            # OUTPUT TO TABLE
-                            table = dfd.to_string(index=False)
+                                # print(f"Rebuilt Table for {crit}:\n {dfd}")
 
-                            # print(table)
-                            report += table
-                            print(report)
-                            #### ADD EMBED FOR TABLE
-                            embed.add_field(name=f"Sorted by {title}", value=f"{report}", inline=False)
+                                # OUTPUT TO TABLE
+                                table = dfd.to_string(index=False)
+
+                                # print(table)
+                                report += table
+                                print(report)
+                                #### ADD EMBED FOR TABLE
+                                embed.add_field(name=f"{title}", value=f"{report}", inline=False)
 
                     elif indexmissing == 1:
                         embed.add_field(name=f"No Delta Data Found",
