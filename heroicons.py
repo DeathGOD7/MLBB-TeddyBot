@@ -110,5 +110,5 @@ portrait = {
 'aamon':'https://akmweb.youngjoygame.com/web/madmin/image/9d9bd7e99dcaad637c0c7b3280a84a31.png?w=150-150-f6fefd',
 'floryn':'https://akmweb.youngjoygame.com/web/madmin/image/ddd105d16922b8122368acb0a8f3606f.png?w=150-150-1d2234',
 'valentina':'https://akmweb.youngjoygame.com/web/madmin/image/3fcfa9c74ac47800a3e13a5985d76e55.png?w=150-150-debef7',
-'edith':'https://static.wikia.nocookie.net/mobile-legends/images/0/09/Edith.png'
+'edith':'https://akmweb.youngjoygame.com/web/madmin/image/04d1a3a5e49f6a68604bab57ca96ab5c.png?w=150-150-312b1f'
 }
