@@ -75,7 +75,7 @@ else:
 # endregion
 
 # region VERSION
-version = "BETA Release Candidate Ver.03.15 (20211217)"
+version = "BETA Release Candidate Ver.03.17 (20220110)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -375,39 +375,41 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                     if chartview!="null" and role=="null":
                         view = "null"
                         box = 0
-                        
+
+                        #transform period--- there is no "Day" chart
+                        ppath = period.replace("Day", "week").replace("Week", "week").replace("Month","month").replace("Season", "season")
 
                         #region Elo Conditions
                         if chartview=="topxwin":
                             requestchart = "Top X Win"
-                            filename = f"{elo}.win.png"
+                            filename = f"{ppath}.{elo}.win.png"
                             charttype = "baseXall.rd"
 
                         elif chartview=="topxban":
                             requestchart = "Top X BAN"
-                            filename = f"{elo}.ban.png"
+                            filename = f"{ppath}.{elo}.ban.png"
                             charttype = "baseXall.rd"
 
                         elif chartview=="topxuse":
                             requestchart = "Top X USE"
-                            filename = f"{elo}.use.png"
+                            filename = f"{ppath}.{elo}.use.png"
                             charttype = "baseXall.rd"
 
                         elif chartview=="topxwinbox":
                             requestchart = "Top X Win (box)"
-                            filename = f"{elo}.win.png"
+                            filename = f"{ppath}.{elo}.win.png"
                             charttype = "baseXall-box.rd"
                             box=1
 
                         elif chartview=="topxbanbox":
                             requestchart = "Top X BAN (box)"
-                            filename = f"{elo}.ban.png"
+                            filename = f"{ppath}.{elo}.ban.png"
                             charttype = "baseXall-box.rd"
                             box=1
 
                         elif chartview=="topxusebox":
                             requestchart = "Top X USE (box)"
-                            filename = f"{elo}.use.png"
+                            filename = f"{ppath}.{elo}.use.png"
                             charttype = "baseXall-box.rd"
                             box=1
                         #endregion
@@ -448,34 +450,34 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
 
                         if chartview == "topxwin":
                             requestchart = "Top X Win"
-                            filename = f"{role}.win.png"
+                            filename = f"{ppath}.{role}.win.png"
                             charttype = "baseXrole.rd"
 
                         elif chartview == "topxban":
                             requestchart = "Top X BAN"
-                            filename = f"{role}.ban.png"
+                            filename = f"{ppath}.{role}.ban.png"
                             charttype = "baseXrole.rd"
 
                         elif chartview == "topxuse":
                             requestchart = "Top X USE"
-                            filename = f"{role}.use.png"
+                            filename = f"{ppath}.{role}.use.png"
                             charttype = "baseXrole.rd"
 
                         elif chartview == "topxwinbox":
                             requestchart = "Top X Win (box)"
-                            filename = f"{role}.win.png"
+                            filename = f"{ppath}.{role}.win.png"
                             charttype = "baseXrole-box.rd"
                             box = 1
 
                         elif chartview == "topxbanbox":
                             requestchart = "Top X BAN (box)"
-                            filename = f"{role}.ban.png"
+                            filename = f"{ppath}.{role}.ban.png"
                             charttype = "baseXrole-box.rd"
                             box = 1
 
                         elif chartview == "topxusebox":
                             requestchart = "Top X USE (box)"
-                            filename = f"{role}.use.png"
+                            filename = f"{ppath}.{role}.use.png"
                             charttype = "baseXrole-box.rd"
                             box = 1
 
