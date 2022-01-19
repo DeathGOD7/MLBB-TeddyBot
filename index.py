@@ -75,7 +75,7 @@ else:
 # endregion
 
 # region VERSION
-version = "BETA Release Candidate Ver.03.17 (20220110)"
+version = "BETA Release Candidate Ver.03.2 (20220118)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -121,6 +121,16 @@ sumdf = grabsummarydata(summarycsv)
 #build heroes master table
 dfx = grabherotable(latest)
 roji = {'All': '<:Epic:910268690098974740>', 'Legend': '<:Legend:910268716044914688>','Mythic': '<:Mythic:910268741181374534>'}
+
+#build role lookup:
+roledict = {}
+
+for p in prof:
+    hrslt = getattr(roles, p)
+    for name in hrslt:
+        name = name.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()
+        roledict[name] = p
+#print(roledict)
 
 ##### DISCORD LISTENERS #######
 
@@ -1269,9 +1279,15 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                              name="Commands",
                              value="commands")
                         ]
-                         )
+                         ),
+                 create_option(
+                     name="vs",
+                     description="Enter the Hero you'd like to compare with!",
+                     option_type=3,
+                     required=False
+                 )
              ])
-async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null"):
+async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null",vs="null"):
     channelid = ctx.channel.id
     await ctx.send(f":bear: `Processing request...`")
     if channelid in optout:
@@ -1345,7 +1361,23 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
                 #### NEXT----  START TIERDATA
                 ico = mojimap.moji[hnl]
                 runtime = latest.replace(rawpath, "")
-                portrait = heroicons.portrait[hnl]
+                hport = roledict[hnl]
+
+                if hport == 'support':
+                    hpoji = '<:Support_Icon:864271610797490177>'
+                elif hport == 'mage':
+                    hpoji = '<:Mage_Icon:864271610966179901>'
+                elif hport == 'marksman':
+                    hpoji = '<:Marksman_Icon:864271610882293831>'
+                elif hport == 'assassin':
+                    hpoji = '<:Assassin_Icon:864271610663272479>'
+                elif hport == 'tank':
+                    hpoji = '<:Tank_Icon:864271610964738058>'
+                elif hport == 'fighter':
+                    hpoji = '<:Fighter_Icon:864271610986102784>'
+                else:
+                    hport = 'Unknown'
+                    hpoji = '<:null:852659015532150825>'
 
                 ###### Transform filters:
 
@@ -1363,496 +1395,917 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
                 elif elo == "Mythic":
                     color = discord.Color.purple()
 
+# CHECK FOR PARAMS:
+                if vs != "null":
 
-                #### DECLARE EMBED ####
-                embed = discord.Embed(
-                    title=f"TierData for {hn}",
-                    description=f"\n",
-                    color=color)
+                    chero = vs.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()
+                    print(f"Searching {chero} from {vs}")
+                    log.debug(f"Searching {chero} from {vs}")
 
-                embed.set_thumbnail(url=f"{portrait}")
+                    ### FIRST---- Search Array for Hero
+                    # cresult = [v for v in names if chero in v.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()]
 
-#CHECK FOR HISTORY:
-                if show=="history":
-                    #SHOW HISTORY CHART
-                    chart = f"{histpath}{elo}/{dts}/{hnl}.png"
+                    # Try Exact Match
+                    cresult = [v for v in names if
+                              chero == v.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()]
 
-                    if not os.path.exists(chart):
-                        embed.add_field(name=f" {ico} Historical Summary:", value=f"`No Chart Available...`", inline=False)
-                        log.warning(f"Missing Chart: {chart}")
+                    if len(cresult) == 0:
+                        cresult = [v for v in names if v.replace("-", "").replace("'", "").replace(".", "").replace(" ","").lower().startswith(chero)]
 
-                        #### ADD EMBED FOR Foot
-                        embed.add_field(name=f"Source:",
-                                        value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
+                    # Try Partial
+                    if len(cresult) == 0:
+                        await ctx.send(content=f"Could not find `{chero}`!")
+                    elif len(cresult) > 1:
+                        await ctx.send(content=f"Comparison search found more than one match.. did you mean:`{cresult}`?")
+                    # HERO FOUND
+                    else:
+                        chn = cresult[0]
+
+                        log.info(f"Looking for... {chn}")
+                        chnl = chn.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()
+
+                        #### NEXT----  START TIERDATA
+                        cico = mojimap.moji[chnl]
+
+                        chport = roledict[chnl]
+
+                        if chport == 'support':
+                            chpoji = '<:Support_Icon:864271610797490177>'
+                        elif chport == 'mage':
+                            chpoji = '<:Mage_Icon:864271610966179901>'
+                        elif chport == 'marksman':
+                            chpoji = '<:Marksman_Icon:864271610882293831>'
+                        elif chport == 'assassin':
+                            chpoji = '<:Assassin_Icon:864271610663272479>'
+                        elif chport == 'tank':
+                            chpoji = '<:Tank_Icon:864271610964738058>'
+                        elif chport == 'fighter':
+                            chpoji = '<:Fighter_Icon:864271610986102784>'
+                        else:
+                            chport = 'Unknown'
+                            chpoji = '<:null:852659015532150825>'
+
+#### DECLARE EMBED ####
+                        portrait = "https://icons.iconarchive.com/icons/google/noto-emoji-objects/256/62963-crossed-swords-icon.png"
+
+                        embed = discord.Embed(
+                            title=f"{hn} vs {chn}",
+                            description=f"\nTierData Compare: Elo: {elo}, Period: {dt}",
+                            color=color)
+
+                        embed.set_thumbnail(url=f"{portrait}")
+
+                        # region STANDARD TABLE: MAIN HERO
+                        if period == "Day":
+
+                            #### Create Filters
+                            nfilter = dfx.isin([hn]).any(axis=1)
+
+                            if elo == "All":
+                                efilter = dfx["elo"]
+                            else:
+                                efilter = dfx["elo"].isin([elo])
+
+                            hdf = dfx[nfilter & efilter]
+
+                            hdf = hdf.reindex(columns=['-', 'elo', 'win', 'use', 'ban', 'wrank', 'urank', 'banrank'])
+
+                            #### Add Padding and FORMAT:
+                            hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
+                            hdf['win'] = hdf['win'].astype(str)
+                            hdf['win'] = ('`' + hdf['win'].str.center(5) + '`')
+                            hdf['use'] = hdf['use'].astype(str)
+                            hdf['use'] = ('`' + hdf['use'].str.center(5) + '`')
+                            hdf['ban'] = hdf['ban'].astype(str)
+                            hdf['ban'] = ('`' + hdf['ban'].str.center(5) + '`')
+                            hdf['wrank'] = hdf['wrank'].astype(str)
+                            hdf['wrank'] = ('`' + hdf['wrank'].str.center(3) + '`')
+                            hdf['urank'] = hdf['urank'].astype(str)
+                            hdf['urank'] = ('`' + hdf['urank'].str.center(3) + '`')
+                            hdf['banrank'] = hdf['banrank'].astype(str)
+                            hdf['banrank'] = ('`' + hdf['banrank'].str.center(3) + '`')
+
+                            # FORMAT COLUMN HEADER
+                            e = "ELO"
+                            e = e.center(6, " ")
+                            i = "-"
+                            i = i.center(2, " ")
+                            w = "WIN%"
+                            w = w.center(5, " ")
+                            u = "USE%"
+                            u = u.center(5, " ")
+                            k = "BAN%"
+                            k = k.center(5, " ")
+                            wr = "WIN"
+                            wr = wr.center(3, " ")
+                            ur = "USE"
+                            ur = ur.center(3, " ")
+                            br = "BAN"
+                            br = br.center(3, " ")
+                            hdf.rename(
+                                columns={'-': i, 'elo': e, 'win': w, 'use': u, 'ban': k, 'wrank': wr, 'urank': ur,
+                                         'banrank': br}, inplace=True)
+                            hdf.columns = hdf.columns.astype(str)
+                            hdf.columns = ('`' + hdf.columns + '`')
+
+                            # print(hdf)
+                        elif period == "Week":
+                            #### Create Filters
+                            nfilter = sumdf.isin([hn]).any(axis=1)
+
+                            if elo == "All":
+                                efilter = sumdf["elo"]
+                            else:
+                                efilter = sumdf["elo"].isin([elo])
+
+                            hdf = sumdf[nfilter & efilter]
+                            hdf = hdf.reindex(columns=['-', 'elo', 'win_w', 'use_w', 'ban_w'])
+                            hdf['-'] = hdf['elo'].map(roji)
+
+                            #### Add Padding and FORMAT:
+                            hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
+                            hdf['win_w'] = hdf['win_w'].astype(str)
+                            hdf['win_w'] = ('`' + hdf['win_w'].str.center(5) + '`')
+                            hdf['use_w'] = hdf['use_w'].astype(str)
+                            hdf['use_w'] = ('`' + hdf['use_w'].str.center(5) + '`')
+                            hdf['ban_w'] = hdf['ban_w'].astype(str)
+                            hdf['ban_w'] = ('`' + hdf['ban_w'].str.center(5) + '`')
+
+                            # FORMAT COLUMN HEADER
+                            e = "ELO"
+                            e = e.center(6, " ")
+                            i = "-"
+                            i = i.center(2, " ")
+                            w = "WIN%"
+                            w = w.center(5, " ")
+                            u = "USE%"
+                            u = u.center(5, " ")
+                            k = "BAN%"
+                            k = k.center(5, " ")
+                            hdf.rename(columns={'-': i, 'elo': e, 'win_w': w, 'use_w': u, 'ban_w': k}, inplace=True)
+                            hdf.columns = hdf.columns.astype(str)
+                            hdf.columns = ('`' + hdf.columns + '`')
+
+                            # print(hdf)
+                        elif period == "Month":
+                            #### Create Filters
+                            nfilter = sumdf.isin([hn]).any(axis=1)
+
+                            if elo == "All":
+                                efilter = sumdf["elo"]
+                            else:
+                                efilter = sumdf["elo"].isin([elo])
+
+                            hdf = sumdf[nfilter & efilter]
+                            hdf = hdf.reindex(columns=['-', 'elo', 'win_m', 'use_m', 'ban_m'])
+                            hdf['-'] = hdf['elo'].map(roji)
+
+                            #### Add Padding and FORMAT:
+                            hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
+                            hdf['win_m'] = hdf['win_m'].astype(str)
+                            hdf['win_m'] = ('`' + hdf['win_m'].str.center(5) + '`')
+                            hdf['use_m'] = hdf['use_m'].astype(str)
+                            hdf['use_m'] = ('`' + hdf['use_m'].str.center(5) + '`')
+                            hdf['ban_m'] = hdf['ban_m'].astype(str)
+                            hdf['ban_m'] = ('`' + hdf['ban_m'].str.center(5) + '`')
+
+                            # FORMAT COLUMN HEADER
+                            e = "ELO"
+                            e = e.center(6, " ")
+                            i = "-"
+                            i = i.center(2, " ")
+                            w = "WIN%"
+                            w = w.center(5, " ")
+                            u = "USE%"
+                            u = u.center(5, " ")
+                            k = "BAN%"
+                            k = k.center(5, " ")
+                            hdf.rename(columns={'-': i, 'elo': e, 'win_m': w, 'use_m': u, 'ban_m': k}, inplace=True)
+                            hdf.columns = hdf.columns.astype(str)
+                            hdf.columns = ('`' + hdf.columns + '`')
+
+                            # print(hdf)
+                        elif period == "Season":
+                            #### Create Filters
+                            nfilter = sumdf.isin([hn]).any(axis=1)
+
+                            if elo == "All":
+                                efilter = sumdf["elo"]
+                            else:
+                                efilter = sumdf["elo"].isin([elo])
+
+                            hdf = sumdf[nfilter & efilter]
+                            hdf = hdf.reindex(columns=['-', 'elo', 'win_s', 'use_s', 'ban_s'])
+                            hdf['-'] = hdf['elo'].map(roji)
+
+                            #### Add Padding and FORMAT:
+                            hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
+                            hdf['win_s'] = hdf['win_s'].astype(str)
+                            hdf['win_s'] = ('`' + hdf['win_s'].str.center(5) + '`')
+                            hdf['use_s'] = hdf['use_s'].astype(str)
+                            hdf['use_s'] = ('`' + hdf['use_s'].str.center(5) + '`')
+                            hdf['ban_s'] = hdf['ban_s'].astype(str)
+                            hdf['ban_s'] = ('`' + hdf['ban_s'].str.center(5) + '`')
+
+                            # FORMAT COLUMN HEADER
+                            e = "ELO"
+                            e = e.center(6, " ")
+                            i = "-"
+                            i = i.center(2, " ")
+                            w = "WIN%"
+                            w = w.center(5, " ")
+                            u = "USE%"
+                            u = u.center(5, " ")
+                            k = "BAN%"
+                            k = k.center(5, " ")
+                            hdf.rename(columns={'-': i, 'elo': e, 'win_s': w, 'use_s': u, 'ban_s': k}, inplace=True)
+                            hdf.columns = hdf.columns.astype(str)
+                            hdf.columns = ('`' + hdf.columns + '`')
+
+                            # print(hdf)
+
+                        if hdf.empty:
+                            hdf = "`No data available.`"
+                            table = hdf
+                        else:
+                            table = hdf.to_string(index=False)
+                        embed.add_field(name=f" {ico}   {hn}  -  {hpoji}{hport.capitalize()}", value=f"{table}\u200B\n", inline=False)
+
+                        # endregion: MAIN HERO
+                        embed.add_field(name=f" -- vs. -- ", value=f"\u200B",
                                         inline=False)
+                        # region STANDARD TABLE: COMPARE HERO
+                        if period == "Day":
 
+                            #### Create Filters
+                            nfilter = dfx.isin([chn]).any(axis=1)
+
+                            if elo == "All":
+                                efilter = dfx["elo"]
+                            else:
+                                efilter = dfx["elo"].isin([elo])
+
+                            hdf = dfx[nfilter & efilter]
+
+                            hdf = hdf.reindex(columns=['-', 'elo', 'win', 'use', 'ban', 'wrank', 'urank', 'banrank'])
+
+                            #### Add Padding and FORMAT:
+                            hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
+                            hdf['win'] = hdf['win'].astype(str)
+                            hdf['win'] = ('`' + hdf['win'].str.center(5) + '`')
+                            hdf['use'] = hdf['use'].astype(str)
+                            hdf['use'] = ('`' + hdf['use'].str.center(5) + '`')
+                            hdf['ban'] = hdf['ban'].astype(str)
+                            hdf['ban'] = ('`' + hdf['ban'].str.center(5) + '`')
+                            hdf['wrank'] = hdf['wrank'].astype(str)
+                            hdf['wrank'] = ('`' + hdf['wrank'].str.center(3) + '`')
+                            hdf['urank'] = hdf['urank'].astype(str)
+                            hdf['urank'] = ('`' + hdf['urank'].str.center(3) + '`')
+                            hdf['banrank'] = hdf['banrank'].astype(str)
+                            hdf['banrank'] = ('`' + hdf['banrank'].str.center(3) + '`')
+
+                            # FORMAT COLUMN HEADER
+                            e = "ELO"
+                            e = e.center(6, " ")
+                            i = "-"
+                            i = i.center(2, " ")
+                            w = "WIN%"
+                            w = w.center(5, " ")
+                            u = "USE%"
+                            u = u.center(5, " ")
+                            k = "BAN%"
+                            k = k.center(5, " ")
+                            wr = "WIN"
+                            wr = wr.center(3, " ")
+                            ur = "USE"
+                            ur = ur.center(3, " ")
+                            br = "BAN"
+                            br = br.center(3, " ")
+                            hdf.rename(
+                                columns={'-': i, 'elo': e, 'win': w, 'use': u, 'ban': k, 'wrank': wr, 'urank': ur,
+                                         'banrank': br}, inplace=True)
+                            hdf.columns = hdf.columns.astype(str)
+                            hdf.columns = ('`' + hdf.columns + '`')
+
+                            # print(hdf)
+                        elif period == "Week":
+                            #### Create Filters
+                            nfilter = sumdf.isin([chn]).any(axis=1)
+
+                            if elo == "All":
+                                efilter = sumdf["elo"]
+                            else:
+                                efilter = sumdf["elo"].isin([elo])
+
+                            hdf = sumdf[nfilter & efilter]
+                            hdf = hdf.reindex(columns=['-', 'elo', 'win_w', 'use_w', 'ban_w'])
+                            hdf['-'] = hdf['elo'].map(roji)
+
+                            #### Add Padding and FORMAT:
+                            hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
+                            hdf['win_w'] = hdf['win_w'].astype(str)
+                            hdf['win_w'] = ('`' + hdf['win_w'].str.center(5) + '`')
+                            hdf['use_w'] = hdf['use_w'].astype(str)
+                            hdf['use_w'] = ('`' + hdf['use_w'].str.center(5) + '`')
+                            hdf['ban_w'] = hdf['ban_w'].astype(str)
+                            hdf['ban_w'] = ('`' + hdf['ban_w'].str.center(5) + '`')
+
+                            # FORMAT COLUMN HEADER
+                            e = "ELO"
+                            e = e.center(6, " ")
+                            i = "-"
+                            i = i.center(2, " ")
+                            w = "WIN%"
+                            w = w.center(5, " ")
+                            u = "USE%"
+                            u = u.center(5, " ")
+                            k = "BAN%"
+                            k = k.center(5, " ")
+                            hdf.rename(columns={'-': i, 'elo': e, 'win_w': w, 'use_w': u, 'ban_w': k}, inplace=True)
+                            hdf.columns = hdf.columns.astype(str)
+                            hdf.columns = ('`' + hdf.columns + '`')
+
+                            # print(hdf)
+                        elif period == "Month":
+                            #### Create Filters
+                            nfilter = sumdf.isin([chn]).any(axis=1)
+
+                            if elo == "All":
+                                efilter = sumdf["elo"]
+                            else:
+                                efilter = sumdf["elo"].isin([elo])
+
+                            hdf = sumdf[nfilter & efilter]
+                            hdf = hdf.reindex(columns=['-', 'elo', 'win_m', 'use_m', 'ban_m'])
+                            hdf['-'] = hdf['elo'].map(roji)
+
+                            #### Add Padding and FORMAT:
+                            hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
+                            hdf['win_m'] = hdf['win_m'].astype(str)
+                            hdf['win_m'] = ('`' + hdf['win_m'].str.center(5) + '`')
+                            hdf['use_m'] = hdf['use_m'].astype(str)
+                            hdf['use_m'] = ('`' + hdf['use_m'].str.center(5) + '`')
+                            hdf['ban_m'] = hdf['ban_m'].astype(str)
+                            hdf['ban_m'] = ('`' + hdf['ban_m'].str.center(5) + '`')
+
+                            # FORMAT COLUMN HEADER
+                            e = "ELO"
+                            e = e.center(6, " ")
+                            i = "-"
+                            i = i.center(2, " ")
+                            w = "WIN%"
+                            w = w.center(5, " ")
+                            u = "USE%"
+                            u = u.center(5, " ")
+                            k = "BAN%"
+                            k = k.center(5, " ")
+                            hdf.rename(columns={'-': i, 'elo': e, 'win_m': w, 'use_m': u, 'ban_m': k}, inplace=True)
+                            hdf.columns = hdf.columns.astype(str)
+                            hdf.columns = ('`' + hdf.columns + '`')
+
+                            # print(hdf)
+                        elif period == "Season":
+                            #### Create Filters
+                            nfilter = sumdf.isin([chn]).any(axis=1)
+
+                            if elo == "All":
+                                efilter = sumdf["elo"]
+                            else:
+                                efilter = sumdf["elo"].isin([elo])
+
+                            hdf = sumdf[nfilter & efilter]
+                            hdf = hdf.reindex(columns=['-', 'elo', 'win_s', 'use_s', 'ban_s'])
+                            hdf['-'] = hdf['elo'].map(roji)
+
+                            #### Add Padding and FORMAT:
+                            hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
+                            hdf['win_s'] = hdf['win_s'].astype(str)
+                            hdf['win_s'] = ('`' + hdf['win_s'].str.center(5) + '`')
+                            hdf['use_s'] = hdf['use_s'].astype(str)
+                            hdf['use_s'] = ('`' + hdf['use_s'].str.center(5) + '`')
+                            hdf['ban_s'] = hdf['ban_s'].astype(str)
+                            hdf['ban_s'] = ('`' + hdf['ban_s'].str.center(5) + '`')
+
+                            # FORMAT COLUMN HEADER
+                            e = "ELO"
+                            e = e.center(6, " ")
+                            i = "-"
+                            i = i.center(2, " ")
+                            w = "WIN%"
+                            w = w.center(5, " ")
+                            u = "USE%"
+                            u = u.center(5, " ")
+                            k = "BAN%"
+                            k = k.center(5, " ")
+                            hdf.rename(columns={'-': i, 'elo': e, 'win_s': w, 'use_s': u, 'ban_s': k}, inplace=True)
+                            hdf.columns = hdf.columns.astype(str)
+                            hdf.columns = ('`' + hdf.columns + '`')
+
+                            # print(hdf)
+
+                        if hdf.empty:
+                            hdf = "`No data available.`"
+                            table = hdf
+                        else:
+                            table = hdf.to_string(index=False)
+                        embed.add_field(name=f" {cico}   {chn}  -  {chpoji}{chport.capitalize()}", value=f"{table}", inline=False)
+
+                        # endregion
                         await ctx.channel.send(embed=embed)
 
-                    else:
-                        embed.add_field(name=f" {ico} Historical Summary:", value=f"Changes in Win%, Use%, Ban% over Time.",
-                                    inline=False)
-                        log.info(f"Reading Chart: {chart}")
-                        file = discord.File(chart, filename=f"{hnl}.png")
-                        embed.set_image(url=f"attachment://{hnl}.png")
+# NORMAL HERO DISPLAY FUNCTIONS
+                else:
+                    #### DECLARE EMBED ####
+                    portrait = heroicons.portrait[hnl]
 
-                        #### ADD EMBED FOR Foot
-                        embed.add_field(name=f"Source:",
-                                        value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
+                    embed = discord.Embed(
+                        title=f"TierData for {hn}",
+                        description=f"\n",
+                        color=color)
+
+                    embed.set_thumbnail(url=f"{portrait}")
+
+    #CHECK FOR HISTORY:
+                    if show=="history":
+                        #SHOW HISTORY CHART
+                        chart = f"{histpath}{elo}/{dts}/{hnl}.png"
+
+                        if not os.path.exists(chart):
+                            embed.add_field(name=f" {ico} Historical Summary:", value=f"`No Chart Available...`", inline=False)
+                            log.warning(f"Missing Chart: {chart}")
+
+                            #### ADD EMBED FOR Foot
+                            embed.add_field(name=f"Source:",
+                                            value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
+                                            inline=False)
+
+                            await ctx.channel.send(embed=embed)
+
+                        else:
+                            embed.add_field(name=f" {ico} Historical Summary:", value=f"Changes in Win%, Use%, Ban% over Time.",
                                         inline=False)
+                            log.info(f"Reading Chart: {chart}")
+                            file = discord.File(chart, filename=f"{hnl}.png")
+                            embed.set_image(url=f"attachment://{hnl}.png")
 
-                        await ctx.channel.send(file=file, embed=embed)
-# CHECK FOR HISTORY:
-                if show == "averages":
-                    # SHOW AVERAGES CHART
-                    chart = f"{avgpath}{elo}/{dts}/{hnl}.png"
+                            #### ADD EMBED FOR Foot
+                            embed.add_field(name=f"Source:",
+                                            value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
+                                            inline=False)
 
-                    if not os.path.exists(chart):
-                        embed.add_field(name=f" {ico} Historical Summary:", value=f"`No Chart Available...`", inline=False)
-                        log.warning(f"Missing Chart: {chart}")
+                            await ctx.channel.send(file=file, embed=embed)
+    # CHECK FOR HISTORY:
+                    if show == "averages":
+                        # SHOW AVERAGES CHART
+                        chart = f"{avgpath}{elo}/{dts}/{hnl}.png"
 
-                        #### ADD EMBED FOR Foot
-                        embed.add_field(name=f"Source:",
-                                                value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
+                        if not os.path.exists(chart):
+                            embed.add_field(name=f" {ico} Historical Summary:", value=f"`No Chart Available...`", inline=False)
+                            log.warning(f"Missing Chart: {chart}")
+
+                            #### ADD EMBED FOR Foot
+                            embed.add_field(name=f"Source:",
+                                                    value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
+                                                    inline=False)
+
+                            await ctx.channel.send(embed=embed)
+
+                        else:
+                            embed.add_field(name=f" {ico} Statistical Summary:",
+                                            value=f"Averages in Win%, Use%, Ban% over Time.",
+                                            inline=False)
+                            log.info(f"Reading Chart: {chart}")
+                            file = discord.File(chart, filename=f"{hnl}.png")
+                            embed.set_image(url=f"attachment://{hnl}.png")
+
+                            #### ADD EMBED FOR Foot
+                            embed.add_field(name=f"How to Read:",
+                                            value=f"The boxplot shows the highest and lowest values for each. The line denotes the _median_ value and the ▲ denotes the _mean_. ○ denotes outliers, if detected.",
+                                            inline=False)
+                            embed.add_field(name=f"Source:",
+                                                    value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
+                                                    inline=False)
+                            await ctx.channel.send(file=file, embed=embed)
+
+                    if show == "null":
+                        outlier = 0
+    # region STANDARD TABLE
+                        if period == "Day":
+
+                            #### Create Filters
+                            nfilter = dfx.isin([hn]).any(axis=1)
+
+                            if elo == "All":
+                                efilter = dfx["elo"]
+                            else:
+                                efilter = dfx["elo"].isin([elo])
+
+                            hdf = dfx[nfilter & efilter]
+
+                            hdf = hdf.reindex(columns=['-','elo', 'win', 'use', 'ban', 'wrank', 'urank', 'banrank'])
+
+                            #### Add Padding and FORMAT:
+                            hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
+                            hdf['win'] = hdf['win'].astype(str)
+                            hdf['win'] = ('`' + hdf['win'].str.center(5) + '`')
+                            hdf['use'] = hdf['use'].astype(str)
+                            hdf['use'] = ('`' + hdf['use'].str.center(5) + '`')
+                            hdf['ban'] = hdf['ban'].astype(str)
+                            hdf['ban'] = ('`' + hdf['ban'].str.center(5) + '`')
+                            hdf['wrank'] = hdf['wrank'].astype(str)
+                            hdf['wrank'] = ('`' + hdf['wrank'].str.center(3) + '`')
+                            hdf['urank'] = hdf['urank'].astype(str)
+                            hdf['urank'] = ('`' + hdf['urank'].str.center(3) + '`')
+                            hdf['banrank'] = hdf['banrank'].astype(str)
+                            hdf['banrank'] = ('`' + hdf['banrank'].str.center(3) + '`')
+
+                            # FORMAT COLUMN HEADER
+                            e = "ELO"
+                            e = e.center(6, " ")
+                            i = "-"
+                            i = i.center(2, " ")
+                            w = "WIN%"
+                            w = w.center(5, " ")
+                            u = "USE%"
+                            u = u.center(5, " ")
+                            k = "BAN%"
+                            k = k.center(5, " ")
+                            wr = "WIN"
+                            wr = wr.center(3, " ")
+                            ur = "USE"
+                            ur = ur.center(3, " ")
+                            br = "BAN"
+                            br = br.center(3, " ")
+                            hdf.rename(columns={'-': i, 'elo': e, 'win': w, 'use': u, 'ban': k, 'wrank': wr, 'urank': ur,
+                                                'banrank': br}, inplace=True)
+                            hdf.columns = hdf.columns.astype(str)
+                            hdf.columns = ('`' + hdf.columns + '`')
+
+                            # print(hdf)
+                        elif period == "Week":
+                            #### Create Filters
+                            nfilter = sumdf.isin([hn]).any(axis=1)
+
+                            if elo == "All":
+                                efilter = sumdf["elo"]
+                            else:
+                                efilter = sumdf["elo"].isin([elo])
+
+                            hdf = sumdf[nfilter & efilter]
+                            hdf = hdf.reindex(columns=['-', 'elo', 'win_w', 'use_w', 'ban_w'])
+                            hdf['-'] = hdf['elo'].map(roji)
+
+                            #### Add Padding and FORMAT:
+                            hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
+                            hdf['win_w'] = hdf['win_w'].astype(str)
+                            hdf['win_w'] = ('`' + hdf['win_w'].str.center(5) + '`')
+                            hdf['use_w'] = hdf['use_w'].astype(str)
+                            hdf['use_w'] = ('`' + hdf['use_w'].str.center(5) + '`')
+                            hdf['ban_w'] = hdf['ban_w'].astype(str)
+                            hdf['ban_w'] = ('`' + hdf['ban_w'].str.center(5) + '`')
+
+                            # FORMAT COLUMN HEADER
+                            e = "ELO"
+                            e = e.center(6, " ")
+                            i = "-"
+                            i = i.center(2, " ")
+                            w = "WIN%"
+                            w = w.center(5, " ")
+                            u = "USE%"
+                            u = u.center(5, " ")
+                            k = "BAN%"
+                            k = k.center(5, " ")
+                            hdf.rename(columns={'-': i, 'elo': e, 'win_w': w, 'use_w': u, 'ban_w': k}, inplace=True)
+                            hdf.columns = hdf.columns.astype(str)
+                            hdf.columns = ('`' + hdf.columns + '`')
+
+                            # print(hdf)
+                        elif period == "Month":
+                            #### Create Filters
+                            nfilter = sumdf.isin([hn]).any(axis=1)
+
+                            if elo == "All":
+                                efilter = sumdf["elo"]
+                            else:
+                                efilter = sumdf["elo"].isin([elo])
+
+                            hdf = sumdf[nfilter & efilter]
+                            hdf = hdf.reindex(columns=['-', 'elo', 'win_m', 'use_m', 'ban_m'])
+                            hdf['-'] = hdf['elo'].map(roji)
+
+                            #### Add Padding and FORMAT:
+                            hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
+                            hdf['win_m'] = hdf['win_m'].astype(str)
+                            hdf['win_m'] = ('`' + hdf['win_m'].str.center(5) + '`')
+                            hdf['use_m'] = hdf['use_m'].astype(str)
+                            hdf['use_m'] = ('`' + hdf['use_m'].str.center(5) + '`')
+                            hdf['ban_m'] = hdf['ban_m'].astype(str)
+                            hdf['ban_m'] = ('`' + hdf['ban_m'].str.center(5) + '`')
+
+                            # FORMAT COLUMN HEADER
+                            e = "ELO"
+                            e = e.center(6, " ")
+                            i = "-"
+                            i = i.center(2, " ")
+                            w = "WIN%"
+                            w = w.center(5, " ")
+                            u = "USE%"
+                            u = u.center(5, " ")
+                            k = "BAN%"
+                            k = k.center(5, " ")
+                            hdf.rename(columns={'-': i, 'elo': e, 'win_m': w, 'use_m': u, 'ban_m': k}, inplace=True)
+                            hdf.columns = hdf.columns.astype(str)
+                            hdf.columns = ('`' + hdf.columns + '`')
+
+                            # print(hdf)
+                        elif period == "Season":
+                            #### Create Filters
+                            nfilter = sumdf.isin([hn]).any(axis=1)
+
+                            if elo == "All":
+                                efilter = sumdf["elo"]
+                            else:
+                                efilter = sumdf["elo"].isin([elo])
+
+                            hdf = sumdf[nfilter & efilter]
+                            hdf = hdf.reindex(columns=['-', 'elo', 'win_s', 'use_s', 'ban_s'])
+                            hdf['-'] = hdf['elo'].map(roji)
+
+                            #### Add Padding and FORMAT:
+                            hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
+                            hdf['win_s'] = hdf['win_s'].astype(str)
+                            hdf['win_s'] = ('`' + hdf['win_s'].str.center(5) + '`')
+                            hdf['use_s'] = hdf['use_s'].astype(str)
+                            hdf['use_s'] = ('`' + hdf['use_s'].str.center(5) + '`')
+                            hdf['ban_s'] = hdf['ban_s'].astype(str)
+                            hdf['ban_s'] = ('`' + hdf['ban_s'].str.center(5) + '`')
+
+                            # FORMAT COLUMN HEADER
+                            e = "ELO"
+                            e = e.center(6, " ")
+                            i = "-"
+                            i = i.center(2, " ")
+                            w = "WIN%"
+                            w = w.center(5, " ")
+                            u = "USE%"
+                            u = u.center(5, " ")
+                            k = "BAN%"
+                            k = k.center(5, " ")
+                            hdf.rename(columns={'-': i, 'elo': e, 'win_s': w, 'use_s': u, 'ban_s': k}, inplace=True)
+                            hdf.columns = hdf.columns.astype(str)
+                            hdf.columns = ('`' + hdf.columns + '`')
+
+                            # print(hdf)
+
+                        if hdf.empty:
+                            hdf = "`No data available.`"
+                            table = hdf
+                        else:
+                            table = hdf.to_string(index=False)
+                        embed.add_field(name=f" {ico} Summary for: {dt}", value=f"{table}", inline=False)
+
+                        # endregion
+    # region DELTA TABLE
+                        log.info(f"Request HERO Delta View")
+                        log.info(f"Request Delta View")
+
+                        indexmissing = 0
+                        if period == "Day":
+                            try:
+                                previous_run = min(runtimes[0], runtimes[1])
+                            except IndexError:
+                                indexmissing = 1
+                        elif period == "Week":
+                            try:
+                                previous_run = min(runtimes[0], runtimes[7])
+                            except IndexError:
+                                indexmissing = 1
+                        elif period == "Month":
+                            try:
+                                previous_run = min(runtimes[0], runtimes[30])
+                            except IndexError:
+                                indexmissing = 1
+                        elif period == "Season":
+                            try:
+                                previous_run = min(runtimes[0], runtimes[90])
+                            except IndexError:
+                                indexmissing = 1
+
+                        if indexmissing == 0:
+                            previous = os.path.join(rawpath, previous_run)
+                            log.info(f"Delta Compare: {previous_run} > {latest_run}")
+                            embed.add_field(name=f"Delta Compare:", value=f" {previous_run} > {latest_run}", inline=False)
+
+                            #### Create Filters
+                            nfilter = dfx.isin([hn]).any(axis=1)
+
+                            if elo == "All":
+                                efilter = dfx["elo"]
+                            else:
+                                efilter = dfx["elo"].isin([elo])
+
+                            hldf = dfx[nfilter & efilter]
+                            #hldf = chdf[nfilter & efilter]
+                            hldf = hldf.reindex(columns=['-', 'elo', 'win', 'use', 'ban', 'wrank', 'urank', 'banrank'])
+
+                            pdf = grabherotable(previous)
+                            pnfilter = pdf.isin([hn]).any(axis=1)
+
+                            if elo == "All":
+                                pefilter = pdf["elo"]
+                            else:
+                                pefilter = pdf["elo"].isin([elo])
+
+                            phdf = pdf[pnfilter & pefilter]
+                            phdf = phdf.reindex(columns=['elo', 'win', 'use', 'ban', 'wrank', 'urank', 'banrank'])
+
+                            if hldf.empty or phdf.empty:
+                                embed.add_field(name=f"No Delta Data Found",
+                                                value=f"Not enough datapoints in requested time period",
                                                 inline=False)
+                            else:
 
-                        await ctx.channel.send(embed=embed)
+                                print(f"Current:\n{latest}\n{hldf}")
+                                print(f"Previous:\n{previous}\n{phdf}")
 
-                    else:
-                        embed.add_field(name=f" {ico} Statistical Summary:",
-                                        value=f"Averages in Win%, Use%, Ban% over Time.",
-                                        inline=False)
-                        log.info(f"Reading Chart: {chart}")
-                        file = discord.File(chart, filename=f"{hnl}.png")
-                        embed.set_image(url=f"attachment://{hnl}.png")
+                                df = hldf.merge(phdf, how='left', on='elo')
+                                print(f"Merged Table:\n {df}")
+                                # region DataFrame Calculations
 
-                        #### ADD EMBED FOR Foot
-                        embed.add_field(name=f"How to Read:",
-                                        value=f"The boxplot shows the highest and lowest values for each. The line denotes the _median_ value and the ▲ denotes the _mean_. ○ denotes outliers, if detected.",
-                                        inline=False)
-                        embed.add_field(name=f"Source:",
-                                                value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
-                                                inline=False)
-                        await ctx.channel.send(file=file, embed=embed)
+                                # CALCULATE DELTAS
+                                df['urank_d'] = df['urank_x'] - df['urank_y']
+                                df['wrank_d'] = df['wrank_x'] - df['wrank_y']
+                                df['banrank_d'] = df['banrank_x'] - df['banrank_y']
 
-                if show == "null":
-                    outlier = 0
-# region STANDARD TABLE
-                    if period == "Day":
+                                df['win_d'] = df['win_y'] - df['win_x']
+                                df['use_d'] = df['use_y'] - df['use_x']
+                                df['ban_d'] = df['ban_y'] - df['ban_x']
 
-                        #### Create Filters
-                        nfilter = dfx.isin([hn]).any(axis=1)
+                                df['win_d'] = df['win_d'].round(2)
+                                df['use_d'] = df['use_d'].round(2)
+                                df['ban_d'] = df['ban_d'].round(2)
+                                # endregion
+                                #print(f"Calculated Table:\n {df}")
 
-                        if elo == "All":
-                            efilter = dfx["elo"]
-                        else:
-                            efilter = dfx["elo"].isin([elo])
+                                # region ColumnHeader Mappings
 
-                        hdf = dfx[nfilter & efilter]
+                                r = "RATING"
+                                r = r.center(9, " ")
+                                rd = "R▲"
+                                rd = rd.center(6, " ")
+                                i = "-"
+                                i = i.center(2, " ")
+                                w = "WIN"
+                                w = w.center(6, " ")
+                                u = "USE"
+                                u = u.center(6, " ")
+                                k = "BAN"
+                                k = k.center(6, " ")
 
-                        hdf = hdf.reindex(columns=['-','elo', 'win', 'use', 'ban', 'wrank', 'urank', 'banrank'])
+                                wd = "WIN▲"
+                                wd = wd.center(6, " ")
+                                ud = "USE▲"
+                                ud = ud.center(6, " ")
+                                kd = "BAN▲"
+                                kd = kd.center(6, " ")
 
-                        #### Add Padding and FORMAT:
-                        hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
-                        hdf['win'] = hdf['win'].astype(str)
-                        hdf['win'] = ('`' + hdf['win'].str.center(5) + '`')
-                        hdf['use'] = hdf['use'].astype(str)
-                        hdf['use'] = ('`' + hdf['use'].str.center(5) + '`')
-                        hdf['ban'] = hdf['ban'].astype(str)
-                        hdf['ban'] = ('`' + hdf['ban'].str.center(5) + '`')
-                        hdf['wrank'] = hdf['wrank'].astype(str)
-                        hdf['wrank'] = ('`' + hdf['wrank'].str.center(3) + '`')
-                        hdf['urank'] = hdf['urank'].astype(str)
-                        hdf['urank'] = ('`' + hdf['urank'].str.center(3) + '`')
-                        hdf['banrank'] = hdf['banrank'].astype(str)
-                        hdf['banrank'] = ('`' + hdf['banrank'].str.center(3) + '`')
+                                print (df.columns)
+                                # endregion
 
-                        # FORMAT COLUMN HEADER
-                        e = "ELO"
-                        e = e.center(6, " ")
-                        i = "-"
-                        i = i.center(2, " ")
-                        w = "WIN%"
-                        w = w.center(5, " ")
-                        u = "USE%"
-                        u = u.center(5, " ")
-                        k = "BAN%"
-                        k = k.center(5, " ")
-                        wr = "WIN"
-                        wr = wr.center(3, " ")
-                        ur = "USE"
-                        ur = ur.center(3, " ")
-                        br = "BAN"
-                        br = br.center(3, " ")
-                        hdf.rename(columns={'-': i, 'elo': e, 'win': w, 'use': u, 'ban': k, 'wrank': wr, 'urank': ur,
-                                            'banrank': br}, inplace=True)
-                        hdf.columns = hdf.columns.astype(str)
-                        hdf.columns = ('`' + hdf.columns + '`')
+                                for crit in dsort_by:
+                                    report = "\n"
 
-                        # print(hdf)
-                    elif period == "Week":
-                        #### Create Filters
-                        nfilter = sumdf.isin([hn]).any(axis=1)
+                                    if crit == "wrank_d":
+                                        title = "WR+/-"
+                                        dfd = df.reindex(
+                                            columns=[str(crit), '-', 'wrank_x', 'wrank_y', 'win_x', 'win_d'])
+                                        # print(f"Pre-Table for {crit}:\n {dfd}")
 
-                        if elo == "All":
-                            efilter = sumdf["elo"]
-                        else:
-                            efilter = sumdf["elo"].isin([elo])
+                                        # concat & format field
+                                        dfd['wrank_d'] = dfd['wrank_d'].mask(dfd['wrank_d'] >= 0,
+                                                                             ("+" + dfd['wrank_d'].astype(str)))
+                                        dfd['wrank'] = dfd['wrank_x'].astype(str) + " > " + dfd['wrank_y'].astype(str)
+                                        dfd['win_d'] = dfd['win_d'].mask(dfd['win_d'] >= 0,
+                                                                         ("+" + dfd['win_d'].astype(str)))
 
-                        hdf = sumdf[nfilter & efilter]
-                        hdf = hdf.reindex(columns=['-', 'elo', 'win_w', 'use_w', 'ban_w'])
-                        hdf['-'] = hdf['elo'].map(roji)
+                                        # drop & reorder
+                                        cols = ['-','wrank_d', 'wrank', 'win_x', 'win_d']
+                                        dfd = dfd[cols]
 
-                        #### Add Padding and FORMAT:
-                        hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
-                        hdf['win_w'] = hdf['win_w'].astype(str)
-                        hdf['win_w'] = ('`' + hdf['win_w'].str.center(5) + '`')
-                        hdf['use_w'] = hdf['use_w'].astype(str)
-                        hdf['use_w'] = ('`' + hdf['use_w'].str.center(5) + '`')
-                        hdf['ban_w'] = hdf['ban_w'].astype(str)
-                        hdf['ban_w'] = ('`' + hdf['ban_w'].str.center(5) + '`')
+                                        # add padding:
+                                        dfd['wrank'] = ('`' + dfd['wrank'].str.center(9) + '`')
+                                        dfd['wrank_d'] = dfd['wrank_d'].astype(str)
+                                        dfd['wrank_d'] = ('`' + dfd['wrank_d'].str.center(6) + '`')
+                                        dfd['win_x'] = dfd['win_x'].astype(str)
+                                        dfd['win_x'] = ('`' + dfd['win_x'].str.center(6) + '`')
+                                        dfd['win_d'] = dfd['win_d'].astype(str)
+                                        dfd['win_d'] = ('`' + dfd['win_d'].str.center(6) + '`')
 
-                        # FORMAT COLUMN HEADER
-                        e = "ELO"
-                        e = e.center(6, " ")
-                        i = "-"
-                        i = i.center(2, " ")
-                        w = "WIN%"
-                        w = w.center(5, " ")
-                        u = "USE%"
-                        u = u.center(5, " ")
-                        k = "BAN%"
-                        k = k.center(5, " ")
-                        hdf.rename(columns={'-': i, 'elo': e, 'win_w': w, 'use_w': u, 'ban_w': k}, inplace=True)
-                        hdf.columns = hdf.columns.astype(str)
-                        hdf.columns = ('`' + hdf.columns + '`')
+                                        # format header:
+                                        dfd.rename(columns={'wrank_d': rd, 'wrank': r, '-': i,'win_x': w,
+                                                            'win_d': wd}, inplace=True)
+                                        dfd.columns = dfd.columns.astype(str)
+                                        dfd.columns = ('`' + dfd.columns + '`')
 
-                        # print(hdf)
-                    elif period == "Month":
-                        #### Create Filters
-                        nfilter = sumdf.isin([hn]).any(axis=1)
+                                    elif crit == "banrank_d":
+                                        title = "BAN+/-"
+                                        dfd = df.reindex(
+                                            columns=[str(crit), '-', 'banrank_x', 'banrank_y', 'ban_x',
+                                                     'ban_d'])
+                                        # print(f"Pre-Table for {crit}:\n {dfd}")
 
-                        if elo == "All":
-                            efilter = sumdf["elo"]
-                        else:
-                            efilter = sumdf["elo"].isin([elo])
+                                        # concat & format field
+                                        dfd['banrank_d'] = dfd['banrank_d'].mask(dfd['banrank_d'] >= 0,
+                                                                                 ("+" + dfd['banrank_d'].astype(str)))
+                                        dfd['banrank'] = dfd['banrank_x'].astype(str) + " > " + dfd['banrank_y'].astype(
+                                            str)
+                                        dfd['ban_d'] = dfd['ban_d'].mask(dfd['ban_d'] >= 0,
+                                                                         ("+" + dfd['ban_d'].astype(str)))
 
-                        hdf = sumdf[nfilter & efilter]
-                        hdf = hdf.reindex(columns=['-', 'elo', 'win_m', 'use_m', 'ban_m'])
-                        hdf['-'] = hdf['elo'].map(roji)
+                                        cols = ['-', 'banrank_d', 'banrank', 'ban_x', 'ban_d']
+                                        dfd = dfd[cols]
 
-                        #### Add Padding and FORMAT:
-                        hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
-                        hdf['win_m'] = hdf['win_m'].astype(str)
-                        hdf['win_m'] = ('`' + hdf['win_m'].str.center(5) + '`')
-                        hdf['use_m'] = hdf['use_m'].astype(str)
-                        hdf['use_m'] = ('`' + hdf['use_m'].str.center(5) + '`')
-                        hdf['ban_m'] = hdf['ban_m'].astype(str)
-                        hdf['ban_m'] = ('`' + hdf['ban_m'].str.center(5) + '`')
+                                        # add padding:
+                                        dfd['banrank'] = ('`' + dfd['banrank'].str.center(9) + '`')
+                                        dfd['banrank_d'] = dfd['banrank_d'].astype(str)
+                                        dfd['banrank_d'] = ('`' + dfd['banrank_d'].str.center(6) + '`')
+                                        dfd['ban_x'] = dfd['ban_x'].astype(str)
+                                        dfd['ban_x'] = ('`' + dfd['ban_x'].str.center(6) + '`')
+                                        dfd['ban_d'] = dfd['ban_d'].astype(str)
+                                        dfd['ban_d'] = ('`' + dfd['ban_d'].str.center(6) + '`')
 
-                        # FORMAT COLUMN HEADER
-                        e = "ELO"
-                        e = e.center(6, " ")
-                        i = "-"
-                        i = i.center(2, " ")
-                        w = "WIN%"
-                        w = w.center(5, " ")
-                        u = "USE%"
-                        u = u.center(5, " ")
-                        k = "BAN%"
-                        k = k.center(5, " ")
-                        hdf.rename(columns={'-': i, 'elo': e, 'win_m': w, 'use_m': u, 'ban_m': k}, inplace=True)
-                        hdf.columns = hdf.columns.astype(str)
-                        hdf.columns = ('`' + hdf.columns + '`')
+                                        # format header:
+                                        dfd.rename(
+                                            columns={'banrank_d': rd, 'banrank': r, '-': i, 'ban_x': k,
+                                                     'ban_d': kd}, inplace=True)
+                                        dfd.columns = dfd.columns.astype(str)
+                                        dfd.columns = ('`' + dfd.columns + '`')
 
-                        # print(hdf)
-                    elif period == "Season":
-                        #### Create Filters
-                        nfilter = sumdf.isin([hn]).any(axis=1)
+                                    elif crit == "urank_d":
+                                        title = "Use+/-"
+                                        dfd = df.reindex(
+                                            columns=[str(crit), '-', 'urank_x', 'urank_y', 'use_x', 'use_d'])
+                                        # print(f"Pre-Table for {crit}:\n {dfd}")
 
-                        if elo == "All":
-                            efilter = sumdf["elo"]
-                        else:
-                            efilter = sumdf["elo"].isin([elo])
+                                        # concat & format field
+                                        dfd['urank_d'] = dfd['urank_d'].mask(dfd['urank_d'] >= 0,
+                                                                             ("+" + dfd['urank_d'].astype(str)))
+                                        dfd['urank'] = dfd['urank_x'].astype(str) + " > " + dfd['urank_y'].astype(str)
+                                        dfd['use_d'] = dfd['use_d'].mask(dfd['use_d'] >= 0,
+                                                                         ("+" + dfd['use_d'].astype(str)))
 
-                        hdf = sumdf[nfilter & efilter]
-                        hdf = hdf.reindex(columns=['-', 'elo', 'win_s', 'use_s', 'ban_s'])
-                        hdf['-'] = hdf['elo'].map(roji)
+                                        # drop & reorder
+                                        cols = [ '-', 'urank_d', 'urank','use_x', 'use_d']
+                                        dfd = dfd[cols]
 
-                        #### Add Padding and FORMAT:
-                        hdf['elo'] = ('`' + hdf['elo'].str.center(6) + '`')
-                        hdf['win_s'] = hdf['win_s'].astype(str)
-                        hdf['win_s'] = ('`' + hdf['win_s'].str.center(5) + '`')
-                        hdf['use_s'] = hdf['use_s'].astype(str)
-                        hdf['use_s'] = ('`' + hdf['use_s'].str.center(5) + '`')
-                        hdf['ban_s'] = hdf['ban_s'].astype(str)
-                        hdf['ban_s'] = ('`' + hdf['ban_s'].str.center(5) + '`')
+                                        # add padding:
+                                        dfd['urank'] = ('`' + dfd['urank'].str.center(9) + '`')
+                                        dfd['urank_d'] = dfd['urank_d'].astype(str)
+                                        dfd['urank_d'] = ('`' + dfd['urank_d'].str.center(6) + '`')
+                                        dfd['use_x'] = dfd['use_x'].astype(str)
+                                        dfd['use_x'] = ('`' + dfd['use_x'].str.center(6) + '`')
+                                        dfd['use_d'] = dfd['use_d'].astype(str)
+                                        dfd['use_d'] = ('`' + dfd['use_d'].str.center(6) + '`')
 
-                        # FORMAT COLUMN HEADER
-                        e = "ELO"
-                        e = e.center(6, " ")
-                        i = "-"
-                        i = i.center(2, " ")
-                        w = "WIN%"
-                        w = w.center(5, " ")
-                        u = "USE%"
-                        u = u.center(5, " ")
-                        k = "BAN%"
-                        k = k.center(5, " ")
-                        hdf.rename(columns={'-': i, 'elo': e, 'win_s': w, 'use_s': u, 'ban_s': k}, inplace=True)
-                        hdf.columns = hdf.columns.astype(str)
-                        hdf.columns = ('`' + hdf.columns + '`')
+                                        # format header:
+                                        dfd.rename(columns={'urank_d': rd, 'urank': r, '-': i, 'use_x': u,
+                                                            'use_d': ud}, inplace=True)
+                                        dfd.columns = dfd.columns.astype(str)
+                                        dfd.columns = ('`' + dfd.columns + '`')
 
-                        # print(hdf)
+                                    # print(f"Rebuilt Table for {crit}:\n {dfd}")
 
-                    if hdf.empty:
-                        hdf = "`No data available.`"
-                        table = hdf
-                    else:
-                        table = hdf.to_string(index=False)
-                    embed.add_field(name=f" {ico} Summary for: {dt}", value=f"{table}", inline=False)
+                                    # OUTPUT TO TABLE
+                                    table = dfd.to_string(index=False)
 
-                    # endregion
-# region DELTA TABLE
-                    log.info(f"Request HERO Delta View")
-                    log.info(f"Request Delta View")
+                                    # print(table)
+                                    report += table
+                                    print(report)
+                                    #### ADD EMBED FOR TABLE
+                                    embed.add_field(name=f"{title}", value=f"{report}", inline=False)
 
-                    indexmissing = 0
-                    if period == "Day":
-                        try:
-                            previous_run = min(runtimes[0], runtimes[1])
-                        except IndexError:
-                            indexmissing = 1
-                    elif period == "Week":
-                        try:
-                            previous_run = min(runtimes[0], runtimes[7])
-                        except IndexError:
-                            indexmissing = 1
-                    elif period == "Month":
-                        try:
-                            previous_run = min(runtimes[0], runtimes[30])
-                        except IndexError:
-                            indexmissing = 1
-                    elif period == "Season":
-                        try:
-                            previous_run = min(runtimes[0], runtimes[90])
-                        except IndexError:
-                            indexmissing = 1
-
-                    if indexmissing == 0:
-                        previous = os.path.join(rawpath, previous_run)
-                        log.info(f"Delta Compare: {previous_run} > {latest_run}")
-                        embed.add_field(name=f"Delta Compare:", value=f" {previous_run} > {latest_run}", inline=False)
-
-                        #### Create Filters
-                        nfilter = dfx.isin([hn]).any(axis=1)
-
-                        if elo == "All":
-                            efilter = dfx["elo"]
-                        else:
-                            efilter = dfx["elo"].isin([elo])
-
-                        hldf = dfx[nfilter & efilter]
-                        #hldf = chdf[nfilter & efilter]
-                        hldf = hldf.reindex(columns=['-', 'elo', 'win', 'use', 'ban', 'wrank', 'urank', 'banrank'])
-
-                        pdf = grabherotable(previous)
-                        pnfilter = pdf.isin([hn]).any(axis=1)
-
-                        if elo == "All":
-                            pefilter = pdf["elo"]
-                        else:
-                            pefilter = pdf["elo"].isin([elo])
-
-                        phdf = pdf[pnfilter & pefilter]
-                        phdf = phdf.reindex(columns=['elo', 'win', 'use', 'ban', 'wrank', 'urank', 'banrank'])
-
-                        if hldf.empty or phdf.empty:
+                        elif indexmissing == 1:
                             embed.add_field(name=f"No Delta Data Found",
                                             value=f"Not enough datapoints in requested time period",
                                             inline=False)
-                        else:
-
-                            print(f"Current:\n{latest}\n{hldf}")
-                            print(f"Previous:\n{previous}\n{phdf}")
-
-                            df = hldf.merge(phdf, how='left', on='elo')
-                            print(f"Merged Table:\n {df}")
-                            # region DataFrame Calculations
-
-                            # CALCULATE DELTAS
-                            df['urank_d'] = df['urank_x'] - df['urank_y']
-                            df['wrank_d'] = df['wrank_x'] - df['wrank_y']
-                            df['banrank_d'] = df['banrank_x'] - df['banrank_y']
-
-                            df['win_d'] = df['win_y'] - df['win_x']
-                            df['use_d'] = df['use_y'] - df['use_x']
-                            df['ban_d'] = df['ban_y'] - df['ban_x']
-
-                            df['win_d'] = df['win_d'].round(2)
-                            df['use_d'] = df['use_d'].round(2)
-                            df['ban_d'] = df['ban_d'].round(2)
-                            # endregion
-                            #print(f"Calculated Table:\n {df}")
-
-                            # region ColumnHeader Mappings
-
-                            r = "RATING"
-                            r = r.center(9, " ")
-                            rd = "R▲"
-                            rd = rd.center(6, " ")
-                            i = "-"
-                            i = i.center(2, " ")
-                            w = "WIN"
-                            w = w.center(6, " ")
-                            u = "USE"
-                            u = u.center(6, " ")
-                            k = "BAN"
-                            k = k.center(6, " ")
-
-                            wd = "WIN▲"
-                            wd = wd.center(6, " ")
-                            ud = "USE▲"
-                            ud = ud.center(6, " ")
-                            kd = "BAN▲"
-                            kd = kd.center(6, " ")
-
-                            print (df.columns)
-                            # endregion
-
-                            for crit in dsort_by:
-                                report = "\n"
-
-                                if crit == "wrank_d":
-                                    title = "WR+/-"
-                                    dfd = df.reindex(
-                                        columns=[str(crit), '-', 'wrank_x', 'wrank_y', 'win_x', 'win_d'])
-                                    # print(f"Pre-Table for {crit}:\n {dfd}")
-
-                                    # concat & format field
-                                    dfd['wrank_d'] = dfd['wrank_d'].mask(dfd['wrank_d'] >= 0,
-                                                                         ("+" + dfd['wrank_d'].astype(str)))
-                                    dfd['wrank'] = dfd['wrank_x'].astype(str) + " > " + dfd['wrank_y'].astype(str)
-                                    dfd['win_d'] = dfd['win_d'].mask(dfd['win_d'] >= 0,
-                                                                     ("+" + dfd['win_d'].astype(str)))
-
-                                    # drop & reorder
-                                    cols = ['-','wrank_d', 'wrank', 'win_x', 'win_d']
-                                    dfd = dfd[cols]
-
-                                    # add padding:
-                                    dfd['wrank'] = ('`' + dfd['wrank'].str.center(9) + '`')
-                                    dfd['wrank_d'] = dfd['wrank_d'].astype(str)
-                                    dfd['wrank_d'] = ('`' + dfd['wrank_d'].str.center(6) + '`')
-                                    dfd['win_x'] = dfd['win_x'].astype(str)
-                                    dfd['win_x'] = ('`' + dfd['win_x'].str.center(6) + '`')
-                                    dfd['win_d'] = dfd['win_d'].astype(str)
-                                    dfd['win_d'] = ('`' + dfd['win_d'].str.center(6) + '`')
-
-                                    # format header:
-                                    dfd.rename(columns={'wrank_d': rd, 'wrank': r, '-': i,'win_x': w,
-                                                        'win_d': wd}, inplace=True)
-                                    dfd.columns = dfd.columns.astype(str)
-                                    dfd.columns = ('`' + dfd.columns + '`')
-
-                                elif crit == "banrank_d":
-                                    title = "BAN+/-"
-                                    dfd = df.reindex(
-                                        columns=[str(crit), '-', 'banrank_x', 'banrank_y', 'ban_x',
-                                                 'ban_d'])
-                                    # print(f"Pre-Table for {crit}:\n {dfd}")
-
-                                    # concat & format field
-                                    dfd['banrank_d'] = dfd['banrank_d'].mask(dfd['banrank_d'] >= 0,
-                                                                             ("+" + dfd['banrank_d'].astype(str)))
-                                    dfd['banrank'] = dfd['banrank_x'].astype(str) + " > " + dfd['banrank_y'].astype(
-                                        str)
-                                    dfd['ban_d'] = dfd['ban_d'].mask(dfd['ban_d'] >= 0,
-                                                                     ("+" + dfd['ban_d'].astype(str)))
-
-                                    cols = ['-', 'banrank_d', 'banrank', 'ban_x', 'ban_d']
-                                    dfd = dfd[cols]
-
-                                    # add padding:
-                                    dfd['banrank'] = ('`' + dfd['banrank'].str.center(9) + '`')
-                                    dfd['banrank_d'] = dfd['banrank_d'].astype(str)
-                                    dfd['banrank_d'] = ('`' + dfd['banrank_d'].str.center(6) + '`')
-                                    dfd['ban_x'] = dfd['ban_x'].astype(str)
-                                    dfd['ban_x'] = ('`' + dfd['ban_x'].str.center(6) + '`')
-                                    dfd['ban_d'] = dfd['ban_d'].astype(str)
-                                    dfd['ban_d'] = ('`' + dfd['ban_d'].str.center(6) + '`')
-
-                                    # format header:
-                                    dfd.rename(
-                                        columns={'banrank_d': rd, 'banrank': r, '-': i, 'ban_x': k,
-                                                 'ban_d': kd}, inplace=True)
-                                    dfd.columns = dfd.columns.astype(str)
-                                    dfd.columns = ('`' + dfd.columns + '`')
-
-                                elif crit == "urank_d":
-                                    title = "Use+/-"
-                                    dfd = df.reindex(
-                                        columns=[str(crit), '-', 'urank_x', 'urank_y', 'use_x', 'use_d'])
-                                    # print(f"Pre-Table for {crit}:\n {dfd}")
-
-                                    # concat & format field
-                                    dfd['urank_d'] = dfd['urank_d'].mask(dfd['urank_d'] >= 0,
-                                                                         ("+" + dfd['urank_d'].astype(str)))
-                                    dfd['urank'] = dfd['urank_x'].astype(str) + " > " + dfd['urank_y'].astype(str)
-                                    dfd['use_d'] = dfd['use_d'].mask(dfd['use_d'] >= 0,
-                                                                     ("+" + dfd['use_d'].astype(str)))
-
-                                    # drop & reorder
-                                    cols = [ '-', 'urank_d', 'urank','use_x', 'use_d']
-                                    dfd = dfd[cols]
-
-                                    # add padding:
-                                    dfd['urank'] = ('`' + dfd['urank'].str.center(9) + '`')
-                                    dfd['urank_d'] = dfd['urank_d'].astype(str)
-                                    dfd['urank_d'] = ('`' + dfd['urank_d'].str.center(6) + '`')
-                                    dfd['use_x'] = dfd['use_x'].astype(str)
-                                    dfd['use_x'] = ('`' + dfd['use_x'].str.center(6) + '`')
-                                    dfd['use_d'] = dfd['use_d'].astype(str)
-                                    dfd['use_d'] = ('`' + dfd['use_d'].str.center(6) + '`')
-
-                                    # format header:
-                                    dfd.rename(columns={'urank_d': rd, 'urank': r, '-': i, 'use_x': u,
-                                                        'use_d': ud}, inplace=True)
-                                    dfd.columns = dfd.columns.astype(str)
-                                    dfd.columns = ('`' + dfd.columns + '`')
-
-                                # print(f"Rebuilt Table for {crit}:\n {dfd}")
-
-                                # OUTPUT TO TABLE
-                                table = dfd.to_string(index=False)
-
-                                # print(table)
-                                report += table
-                                print(report)
-                                #### ADD EMBED FOR TABLE
-                                embed.add_field(name=f"{title}", value=f"{report}", inline=False)
-
-                    elif indexmissing == 1:
-                        embed.add_field(name=f"No Delta Data Found",
-                                        value=f"Not enough datapoints in requested time period",
-                                        inline=False)
 
 
-                    # endregion
+                        # endregion
 
 
-                    # IF OUTLIER
-                    if outlier >= 1:
-                        embed.add_field(name=f":rotating_light: Outlier Notice:",
-                                        value=f":bear: Teddy has detected a statistically improbable anomaly in the data you have requested."
-                                              f"\nTry using a filter such as `/tdh elo:Legend` to get more accurate results.",
-                                        inline=False)
+                        # IF OUTLIER
+                        if outlier >= 1:
+                            embed.add_field(name=f":rotating_light: Outlier Notice:",
+                                            value=f":bear: Teddy has detected a statistically improbable anomaly in the data you have requested."
+                                                  f"\nTry using a filter such as `/tdh elo:Legend` to get more accurate results.",
+                                            inline=False)
 
-                    #### ADD EMBED FOR Foot
-                    embed.add_field(name=f"Source:",
-                                        value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
-                                        inline=False)
+                        #### ADD EMBED FOR Foot
+                        embed.add_field(name=f"Source:",
+                                            value=f"Data provided by https://m.mobilelegends.com/en/rank\nLast DataSync: {runtime}",
+                                            inline=False)
 
-                    await ctx.channel.send(embed=embed)
+                        await ctx.channel.send(embed=embed)
 
 # endregion
 
