@@ -129,6 +129,7 @@ exp=[
 'Uranus',
 'X.Borg',
 'Yu Zhong',
+'Yin',
 'Zilong'
 ]
 jungle=[

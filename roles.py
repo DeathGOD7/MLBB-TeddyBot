@@ -95,6 +95,7 @@ fighter=['Aldous',
 'Terizla',
 'Thamuz',
 'X.Borg',
+'Yin',
 'Yu Zhong',
 'Zilong']
 assassin=['Aamon',
