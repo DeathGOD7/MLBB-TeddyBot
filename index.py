@@ -75,7 +75,7 @@ else:
 # endregion
 
 # region VERSION
-version = "BETA Release Candidate Ver.03.2 (20220118)"
+version = "BETA Release Candidate Ver.03.201 (20220118)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -382,12 +382,13 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                     embed.set_thumbnail(url=ico)
 
 #CHART VIEW TYPE 1: All ROLES
+                    # transform period--- there is no "Day" chart
+                    ppath = period.replace("Day", "week").replace("Week", "week").replace("Month", "month").replace(
+                        "Season", "season")
+
                     if chartview!="null" and role=="null":
                         view = "null"
                         box = 0
-
-                        #transform period--- there is no "Day" chart
-                        ppath = period.replace("Day", "week").replace("Week", "week").replace("Month","month").replace("Season", "season")
 
                         #region Elo Conditions
                         if chartview=="topxwin":
