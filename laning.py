@@ -84,7 +84,8 @@ mid=[
 'Vexana',
 'Yve',
 'Zhask',
-'Valentina'
+'Valentina',
+'Xavier'
 ]
 exp=[
 'Aldous',

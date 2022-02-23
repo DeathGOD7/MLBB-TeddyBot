@@ -75,7 +75,7 @@ else:
 # endregion
 
 # region VERSION
-version = "BETA Release Candidate Ver.03.201 (20220118)"
+version = "BETA Release Candidate Ver.03.211 (20220223)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
