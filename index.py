@@ -19,6 +19,7 @@ import roles
 import heroes
 import heroicons
 import laning
+import perms
 
 from functions import grabtierdata, grabherotable, grabsummarydata
 
@@ -29,6 +30,7 @@ import logging
 # region ENVIRONMENT
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
+
 # endregion
 
 # region LOGGING
@@ -75,19 +77,9 @@ else:
 # endregion
 
 # region VERSION
-version = "BETA Release Candidate Ver.03.211 (20220223)"
+version = "BETA Release Candidate Ver.03.214 (20220228)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
-# endregion
-
-# region PERMISSIONS
-guild_ids = [850386581135163489,832548513383972884]
-log.info(f"Enabling for Server(s):{guild_ids}")
-
-optin = [853806791150665748,873259572985495552]
-optout = []
-
-summaryroles = ['MLBB Official','DEV','Discord Bot Developer','Lead Moderator']
 # endregion
 
 # region VARIABLES
@@ -138,10 +130,14 @@ bot = commands.Bot(command_prefix="/td ", intents=discord.Intents.all())
 slash = SlashCommand(bot, sync_commands=True)
 # endregion
 
+# region PERMISSIONS
+summaryroles = ['MLBB Official','DEV','Discord Bot Developer','Lead Moderator']
+# endregion
+
 # region MAIN TD FUNCTION
 @slash.slash(name="td",
              description="Use this command to get the most recent TierData!.",
-             guild_ids=guild_ids,
+             guild_ids=perms.guild_ids,
              options=[
                  create_option(
                      name="elo",
@@ -295,7 +291,7 @@ slash = SlashCommand(bot, sync_commands=True)
 async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="normal",chartview="null", about="null"):
     channelid = ctx.channel.id
     await ctx.send(f":bear: `Processing request...`")
-    if channelid in optout:
+    if channelid in perms.optout:
         await ctx.channel.send(content="`Sorry, I'm not allowed to do that here. \nPlease try a different channel.`")
         channelname = ctx.channel.name
         log.info(f"Permission Denied for Channel: {channelname}({channelid})")
@@ -1291,7 +1287,7 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
 async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null",vs="null"):
     channelid = ctx.channel.id
     await ctx.send(f":bear: `Processing request...`")
-    if channelid in optout:
+    if channelid in perms.optout:
         await ctx.channel.send(content="`Sorry, I'm not allowed to do that here. \nPlease try a different channel.`")
         channelname = ctx.channel.name
         log.info(f"Permission Denied for Channel: {channelname}({channelid})")
@@ -2314,6 +2310,7 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
 @bot.event
 async def on_ready():
     log.info('We have logged in as {0.user}'.format(bot))
+    log.info(f"Enabling for Server(s):{perms.guild_ids}")
 
     startupembed = discord.Embed(
        title=f"***Started Teddy-{version}",
@@ -2322,7 +2319,7 @@ async def on_ready():
     startupembed.set_thumbnail(
         url="https://icons.iconarchive.com/icons/custom-icon-design/flatastic-9/256/Accept-icon.png")
 
-    for channel_id in optin:
+    for channel_id in perms.optin:
         await bot.get_channel(channel_id).send(embed=startupembed)
 
 # endregion

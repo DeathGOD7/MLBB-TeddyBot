@@ -9,3 +9,4 @@ index.py.bak
 *.DS_Store
 .env
 *.env
+/perms.py
