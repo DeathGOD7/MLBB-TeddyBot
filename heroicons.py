@@ -113,5 +113,6 @@ portrait = {
 'edith':'https://akmweb.youngjoygame.com/web/madmin/image/04d1a3a5e49f6a68604bab57ca96ab5c.png?w=150-150-312b1f',
 'yin':'https://akmweb.youngjoygame.com/web/madmin/image/64b128105615ba7902959147acfb803a.png?w=150-150-240603',
 'melissa':'https://static.wikia.nocookie.net/mobile-legends/images/7/74/Melissa.png/revision/latest/scale-to-width-down/177?cb=20220218031300',
-'xavier':'https://static.wikia.nocookie.net/mobile-legends/images/7/7d/Xavier.png/revision/latest/scale-to-width-down/177?cb=20220203075727'
+'xavier':'https://static.wikia.nocookie.net/mobile-legends/images/7/7d/Xavier.png/revision/latest/scale-to-width-down/177?cb=20220203075727',
+'julian':'https://static.wikia.nocookie.net/mobile-legends/images/7/77/Julian.png/revision/latest/scale-to-width-down/177?cb=20220317095222'
 }
