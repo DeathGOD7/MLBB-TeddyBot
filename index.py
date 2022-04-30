@@ -14,14 +14,9 @@ from discord_slash import SlashCommand, SlashContext
 from discord_slash.utils.manage_commands import create_option, create_choice
 
 # IMPORT MOJI MAP
-import mojimap
-import roles
-import heroes
-import heroicons
-import laning
 import perms
 
-from functions import grabtierdata, grabherotable, grabsummarydata
+from functions import grabtierdata, grabherotable, grabsummarydata, heroesgen
 
 
 import logging
@@ -77,7 +72,7 @@ else:
 # endregion
 
 # region VERSION
-version = "BETA Release Candidate Ver.03.214 (20220228)"
+version = "BETA Release Candidate Ver.03.501 (20220429)"
 print(f"Starting Teddy-{version}...")
 logging.info(f"Starting Teddy-{version}...")
 # endregion
@@ -110,9 +105,11 @@ print(f'Latest JSON file: {latest}')
 summarycsv = f'{chartpath}csv/rd.averages.master.csv'
 sumdf = grabsummarydata(summarycsv)
 
-#build heroes master table
+#build heroes master tables
 dfx = grabherotable(latest)
 roji = {'All': '<:Epic:910268690098974740>', 'Legend': '<:Legend:910268716044914688>','Mythic': '<:Mythic:910268741181374534>'}
+
+hlist, portrait, moji, laning, roles = heroesgen()
 
 #build role lookup:
 roledict = {}
@@ -628,7 +625,7 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                                                 # filter by role
                                                 if role != "null":
                                                     rslt = getattr(roles, role)
-                                                    # print(rslt)
+
                                                     df = df[df['name'].isin(rslt)]
 
                                                     if role == 'support':
@@ -656,7 +653,7 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                                                 #### Add Icon Column
                                                 dfs['o'] = dfs['name'].str.lower()
                                                 dfs['o'] = dfs['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
-                                                dfs['-'] = dfs['o'].map(mojimap.moji)
+                                                dfs['-'] = dfs['o'].map(moji)
                                                 del dfs['o']
                                                 #print(f"Current Table:\n {dfs}")
 
@@ -1126,7 +1123,7 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                                 #### Add Icon Column
                                 df['o'] = df['name'].str.lower()
                                 df['o'] = df['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
-                                df['-'] = df['o'].map(mojimap.moji)
+                                df['-'] = df['o'].map(moji)
                                 del df['o']
 
                                 #### Add Padding and FORMAT:
@@ -1285,6 +1282,7 @@ async def _overall(ctx, elo="All",period="Day", sort="Top", role="null", view="n
                  )
              ])
 async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null",vs="null"):
+    global portrait, hlist
     channelid = ctx.channel.id
     await ctx.send(f":bear: `Processing request...`")
     if channelid in perms.optout:
@@ -1323,7 +1321,11 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
             await ctx.channel.send(embed=helpembed)
         else:
 #LOOK FOR HERO
-            names = heroes.list
+            #fix punctuation
+            for i in range(len(hlist)):
+                hlist[i] = hlist[i].replace('Chang-e', 'Chang\'e').replace('X-Borg', 'X.Borg').replace('Yi Sun-Shin', 'Yi Sun-shin')
+            names = hlist
+
             shero = hero.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()
             print(f"Searching {shero} from {hero}")
             log.debug(f"Searching {shero} from {hero}")
@@ -1356,7 +1358,7 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
                 hnl = hn.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()
 
                 #### NEXT----  START TIERDATA
-                ico = mojimap.moji[hnl]
+                ico = moji[hnl]
                 runtime = latest.replace(rawpath, "")
                 hport = roledict[hnl]
 
@@ -1422,7 +1424,7 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
                         chnl = chn.replace("-", "").replace("'", "").replace(".", "").replace(" ", "").lower()
 
                         #### NEXT----  START TIERDATA
-                        cico = mojimap.moji[chnl]
+                        cico = moji[chnl]
 
                         chport = roledict[chnl]
 
@@ -1443,14 +1445,14 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
                             chpoji = '<:null:852659015532150825>'
 
 #### DECLARE EMBED ####
-                        portrait = "https://icons.iconarchive.com/icons/google/noto-emoji-objects/256/62963-crossed-swords-icon.png"
+                        emportrait = "https://icons.iconarchive.com/icons/google/noto-emoji-objects/256/62963-crossed-swords-icon.png"
 
                         embed = discord.Embed(
                             title=f"{hn} vs {chn}",
                             description=f"\nTierData Compare: Elo: {elo}, Period: {dt}",
                             color=color)
 
-                        embed.set_thumbnail(url=f"{portrait}")
+                        embed.set_thumbnail(url=f"{emportrait}")
 
                         # region STANDARD TABLE: MAIN HERO
                         if period == "Day":
@@ -1813,14 +1815,14 @@ async def test(ctx, hero: str, elo="All", period="Day", show="null", about="null
 # NORMAL HERO DISPLAY FUNCTIONS
                 else:
                     #### DECLARE EMBED ####
-                    portrait = heroicons.portrait[hnl]
+                    emportrait = portrait[hnl]
 
                     embed = discord.Embed(
                         title=f"TierData for {hn}",
                         description=f"\n",
                         color=color)
 
-                    embed.set_thumbnail(url=f"{portrait}")
+                    embed.set_thumbnail(url=f"{emportrait}")
 
     #CHECK FOR HISTORY:
                     if show=="history":

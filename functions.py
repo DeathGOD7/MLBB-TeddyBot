@@ -1,28 +1,39 @@
 # region IMPORTS
-import datetime
+
 import os
 from os.path import exists
-from dotenv import load_dotenv
+
 
 import json
 import pandas as pd
 from pandas import json_normalize
 
-import discord
-from discord.ext import commands
-from discord_slash import SlashCommand, SlashContext
-from discord_slash.utils.manage_commands import create_option, create_choice
-
-# IMPORT MOJI MAP
-import mojimap
-import roles
-import heroes
-import heroicons
-import laning
-
 import logging
 # endregion
 
+# region VARIABLES
+
+APIpath = "/var/www/html/MLBB-API/v1/"
+herofile = "hero-meta-final.json"
+prof = ["assassin","marksman","mage","tank","support","fighter"]
+lanes = ["gold","exp","mid","jungle","roam"]
+# IMPORT MOJI MAP
+with open(APIpath+herofile) as j:
+    data = json.load(j)
+
+    df = json_normalize(data, ['data'])
+    df = df[df.hero_name != 'None']
+
+    # fix punctuation
+    df = df.replace('Chang-e', 'Chang\'e')
+    df = df.replace('X-Borg', 'X.Borg')
+
+    ### get hero moji (replaces mojimap.py)
+    moji = df.set_index('uid')['discordmoji'].to_dict()
+
+# endregion
+
+# region Summary Table Gen Functions
 def grabtierdata(data):
 
     df = json_normalize(data, ['data', 'data'])
@@ -47,7 +58,7 @@ def grabtierdata(data):
     #### Add Icon Column
     df['o'] = df['name'].str.lower()
     df['o'] = df['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
-    df['-'] = df['o'].map(mojimap.moji)
+    df['-'] = df['o'].map(moji)
 
     df = df.round(2)
     del df['o']
@@ -95,7 +106,7 @@ def grabsummarydata(path):
         #### Add Icon Column
         dfx['o'] = dfx['name'].str.lower()
         dfx['o'] = dfx['o'].str.replace(r"[\"\'\.\-, ]", '', regex=True)
-        dfx['-'] = dfx['o'].map(mojimap.moji)
+        dfx['-'] = dfx['o'].map(moji)
         del dfx['o']
         #print(dfx)
         return dfx
@@ -144,3 +155,108 @@ def grabherotable(latest):
     print(f"Combined:{dfx}")
     # log.debug(f"{dfx}")
     # endregion
+
+# endregion
+
+# region API Functions
+
+
+def heroesgen():
+    jsonfile = APIpath + herofile
+
+    if os.path.exists(jsonfile):
+        print("Requesting: " + jsonfile)
+        logging.info("Requesting: " + jsonfile)
+
+        ##### BUILD LOOKUP TABLES ####
+        with open(jsonfile) as j:
+            data = json.load(j)
+
+            df = json_normalize(data, ['data'])
+            df = df[df.hero_name != 'None']
+
+
+
+            #CONCISE FILTER
+            dfh = df[["hero_name","mlid","uid","hero_icon","discordmoji","portrait","laning","class"]]
+            #print(dfh)
+
+            ### get hero list (replaces heroes.py)
+            hlist = df['hero_name'].tolist()
+            #print(list)
+
+            ### get hero portraits (replaces heroicons.py)
+            portrait = df.set_index('uid')['portrait'].to_dict()
+            #print(portrait)
+
+            ### generate lane groups (replaces laning.py)
+            class laning:
+                for lane in lanes:
+                    lane = str(lane)
+
+                    #dfl = df[df['laning'].str.contains(lane, na = False)]
+                    #dfl = dfl[["hero_name"]]
+                    dfl = df.set_index('laning').filter(like=lane, axis=0)
+                    dfl = dfl[["hero_name"]]
+                    # fix punctuation
+                    dfl = dfl.replace(['Chang-e'], 'Chang\'e')
+                    dfl = dfl.replace(['X-Borg'], 'X.Borg')
+                    dfl = dfl.replace(['Yi Sun-Shin'], 'Yi Sun-shin')
+
+                    #print(f"{lane}:{dfl}")
+
+                    if lane == "gold":
+                        gold = dfl['hero_name'].tolist()
+                    if lane == "mid":
+                        mid = dfl['hero_name'].tolist()
+                    if lane == "roam":
+                        roam = dfl['hero_name'].tolist()
+                    if lane == "exp":
+                        exp = dfl['hero_name'].tolist()
+                    if lane == "jungle":
+                        jungle = dfl['hero_name'].tolist()
+            #print(laning)
+
+            ### get hero moji (replaces mojimap.py)
+            moji = df.set_index('uid')['discordmoji'].to_dict()
+            #print(moji)
+
+            ### generate role groups (replaces roles.py)
+            class roles:
+                for role in prof:
+                    role = str(role)
+                    role = role.capitalize()
+
+                    dfr = df.set_index('class').filter(like=role, axis=0)
+                    dfr = dfr[["hero_name"]]
+                    # fix punctuation
+                    dfr = dfr.replace(['Chang-e'], 'Chang\'e')
+                    dfr = dfr.replace(['X-Borg'], 'X.Borg')
+                    dfr = dfr.replace(['Yi Sun-Shin'], 'Yi Sun-shin')
+
+                    #print(f"{role}:{dfr}")
+
+                    if role == "Fighter":
+                        fighter = dfr['hero_name'].tolist()
+                    if role == "Tank":
+                        tank = dfr['hero_name'].tolist()
+                    if role == "Support":
+                        support = dfr['hero_name'].tolist()
+                    if role == "Assassin":
+                        assassin = dfr['hero_name'].tolist()
+                    if role == "Marksman":
+                        marksman = dfr['hero_name'].tolist()
+                    if role == "Mage":
+                        mage = dfr['hero_name'].tolist()
+
+
+
+            #return list, portrait, moji, gold, mid, roam, exp, jungle, fighter, tank, support, assassin, marksman, mage
+            return hlist, portrait, moji, laning, roles
+
+# endregion
+
+#hlist, portrait, moji, laning, roles = heroesgen()
+#print(hlist)
+#print(getattr(laning,'gold'))
+#print(getattr(roles,'fighter'))
